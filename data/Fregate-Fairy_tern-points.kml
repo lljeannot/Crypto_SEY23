@@ -1,0 +1,1177 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="Waypoints" id="Waypoints">
+	<SimpleField name="timestamp" type="string"></SimpleField>
+</Schema>
+<Folder><name>Waypoints</name>
+  <Placemark>
+	<name>FTC A082</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/11/26 09:46:34+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.944404,-4.584748</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCA090</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/11/26 09:56:19+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.943915,-4.584901</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCA127</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/11/29 06:47:17+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.943842,-4.584808</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCA65</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/11/26 09:30:44+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.943876,-4.584269</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCB115</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/13 10:05:15+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.937871,-4.580496</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCB139</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/13 09:39:38+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.942354,-4.580477</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCB191</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/15 05:33:23+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.948869,-4.588072</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCC49</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/11/26 09:25:42+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.946044,-4.585232</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCD229</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/15 11:04:56+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.9402,-4.58762</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCD241</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/17 06:54:29+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.940168,-4.587569</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCD335</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/12 12:43:16+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.947571,-4.591403</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCE136</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/06 07:08:28+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.942336,-4.582312</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCE157</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/06 07:29:35+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.941955,-4.58298</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCE164</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/23 10:54:07+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.943461,-4.585387</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCF118</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/12 11:27:25+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.94239,-4.582551</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCG103</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/03 06:11:26+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.946272,-4.589107</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCG115</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/12 12:02:22+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.946534,-4.589312</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCG144</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/12 13:10:39+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.946481,-4.590191</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ060</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/22 11:48:40+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.9392,-4.582369</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ061</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/22 11:40:01+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.939402,-4.582394</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ1132</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/17 07:32:07+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.942367,-4.58645</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ1213</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/15 04:25:42+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.937902,-4.580493</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ1222</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/15 07:23:58+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.945411,-4.587071</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ1225</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/15 07:20:54+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.946165,-4.58716</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ1232</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/15 07:42:21+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.947166,-4.587347</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ1252</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/15 07:05:16+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.946313,-4.587513</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ1285</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/15 04:55:29+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.948025,-4.587478</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ1286</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/15 05:12:56+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.94826,-4.587646</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ1401</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/15 05:53:24+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.94822,-4.588426</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ1429</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/15 06:40:36+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.946725,-4.588501</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ1433</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/15 06:08:41+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.947761,-4.588579</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ172</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/22 10:53:02+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.940648,-4.582592</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ199</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/22 11:10:27+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.940694,-4.582809</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ488</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/17 06:06:59+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.938916,-4.587285</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ533</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/17 07:20:25+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.940281,-4.587318</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ564</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/15 11:18:45+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.940177,-4.587449</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ586</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/17 05:47:12+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.937908,-4.587702</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ995</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/23 10:38:45+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.94623,-4.585176</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK087</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/05 07:24:52+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.946263,-4.589087</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK1090</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/05 10:04:40+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.947804,-4.588085</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK59</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/05 07:53:11+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.936242,-4.581209</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK979</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/12 12:21:30+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.946906,-4.590171</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTC118</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/03 05:07:49+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.943102,-4.582852</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTC189</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/02 10:04:35+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.937566,-4.582313</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTC68</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/03 04:50:43+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.943299,-4.581741</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCA184</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/11/30 10:38:40+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.946103,-4.587197</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCB007</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/12 10:43:59+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.939916,-4.579489</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCB023</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/12 11:03:47+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.937051,-4.587976</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCB067</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/12 11:16:30+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.938802,-4.580087</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCD101</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/12 12:41:12+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.943012,-4.585734</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCD115</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/12 04:32:54+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.94629,-4.584967</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCD190</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/06 11:45:57+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.9415,-4.587318</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCD271</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/28 06:23:14+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.943489,-4.589868</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCD353</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/10 11:39:06+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.935208,-4.58354</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCE130</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/23 11:16:19+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.941366,-4.582498</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCE215</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/24 05:41:05+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.936978,-4.580672</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCE42</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/23 11:38:25+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.936996,-4.580668</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCF185</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/12 13:01:23+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.945166,-4.584279</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCF30</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/02 10:53:39+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.941561,-4.581354</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCF38</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/02 11:52:40+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.944712,-4.58301</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCF45</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/02 11:39:38+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.942932,-4.580782</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCG145</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/28 07:58:13+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.945339,-4.58885</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCH132</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/24 06:52:28+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.93916,-4.591241</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCH182</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/02 09:56:09+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.937967,-4.582478</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCH223</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/02 09:33:49+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.946094,-4.586808</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCH34</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/24 05:32:32+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.936978,-4.580672</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCI13</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/06 10:26:31+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.941036,-4.584145</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCI23</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/06 10:42:21+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.941038,-4.584143</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ1321</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/08 07:43:33+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.943731,-4.588218</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ1342</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/28 07:49:39+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.944971,-4.588616</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ141</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/30 06:39:37+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.934718,-4.584305</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ17</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/30 06:01:58+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.935753,-4.582639</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ282</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/10 12:10:40+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.938712,-4.585149</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ33</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/30 05:44:54+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.935868,-4.582504</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ333</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/08 11:02:40+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.939132,-4.586092</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ335</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/08 11:23:34+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.939156,-4.586223</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ369</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/08 11:53:45+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.939301,-4.586251</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ70</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/30 06:16:30+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.934001,-4.583836</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ744</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/12 12:16:10+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.943377,-4.588444</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ770</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/28 07:05:39+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.94089,-4.590382</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ801</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/28 06:48:42+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.941643,-4.590268</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ969</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/08 10:12:42+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.941585,-4.587312</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ984</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/08 10:35:35+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.9395,-4.586749</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK1014</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/12 11:39:35+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.945505,-4.590563</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK107</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/10 10:51:46+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.934171,-4.582137</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK149</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/13 05:30:59+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.945171,-4.58429</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK221</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/13 05:47:58+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.945171,-4.58429</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK238</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/13 05:57:12+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.933102,-4.585634</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK304</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/08 06:23:51+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.933081,-4.585386</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK308</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/12 05:40:29+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.94299,-4.58278</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK331</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/12 05:56:16+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.94299,-4.58278</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK348</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/08 05:58:43+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.941585,-4.587312</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK366</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/12 06:26:51+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.93236,-4.585141</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK396</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/12 06:49:51+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.934767,-4.586756</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK486</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/08 07:11:04+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.937344,-4.587513</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK509</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/08 06:43:43+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.935694,-4.587378</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK534</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/12 06:46:33+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.935962,-4.58803</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK539</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/12 07:22:41+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.936972,-4.587948</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK543</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/12 07:02:59+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.936399,-4.588634</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK585</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2022/01/12 05:53:50+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.94629,-4.584967</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK606</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/24 07:14:33+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.938569,-4.590519</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK611</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/24 07:23:00+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.938097,-4.590772</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK613</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/24 07:02:43+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.938327,-4.590599</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK809</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/24 06:20:31+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.936978,-4.580672</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK825</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints">
+		<SimpleData name="timestamp">2021/12/24 06:37:17+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.940479,-4.591877</coordinates></Point>
+  </Placemark>
+</Folder>
+<Folder><name>Waypoints_08_jan_22</name>
+  <Placemark>
+	<name>FTCK348</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_08_jan_22">
+		<SimpleData name="timestamp">2022/01/08 05:58:43+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.941585,-4.587312</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK304</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_08_jan_22">
+		<SimpleData name="timestamp">2022/01/08 06:23:51+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.933081,-4.585386</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK509</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_08_jan_22">
+		<SimpleData name="timestamp">2022/01/08 06:43:43+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.935694,-4.587378</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK486</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_08_jan_22">
+		<SimpleData name="timestamp">2022/01/08 07:11:04+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.937344,-4.587513</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ1321</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_08_jan_22">
+		<SimpleData name="timestamp">2022/01/08 07:43:33+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.943731,-4.588218</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ969</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_08_jan_22">
+		<SimpleData name="timestamp">2022/01/08 10:12:42+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.941585,-4.587312</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>J00000000</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_08_jan_22">
+		<SimpleData name="timestamp">2022/01/08 10:33:21+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.93948,-4.586627</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ984</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_08_jan_22">
+		<SimpleData name="timestamp">2022/01/08 10:35:35+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.9395,-4.586749</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ333</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_08_jan_22">
+		<SimpleData name="timestamp">2022/01/08 11:02:40+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.939132,-4.586092</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ335</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_08_jan_22">
+		<SimpleData name="timestamp">2022/01/08 11:23:34+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.939156,-4.586223</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ369</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_08_jan_22">
+		<SimpleData name="timestamp">2022/01/08 11:53:45+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.939301,-4.586251</coordinates></Point>
+  </Placemark>
+</Folder>
+<Folder><name>Waypoints_12_dec_21</name>
+  <Placemark>
+	<name>FTCK308</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_12_dec_21">
+		<SimpleData name="timestamp">2021/12/12 05:40:29+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.94299,-4.58278</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK331</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_12_dec_21">
+		<SimpleData name="timestamp">2021/12/12 05:56:16+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.94299,-4.58278</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK366</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_12_dec_21">
+		<SimpleData name="timestamp">2021/12/12 06:26:51+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.93236,-4.585141</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK534</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_12_dec_21">
+		<SimpleData name="timestamp">2021/12/12 06:46:33+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.935962,-4.58803</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK543</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_12_dec_21">
+		<SimpleData name="timestamp">2021/12/12 07:02:59+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.936399,-4.588634</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK539</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_12_dec_21">
+		<SimpleData name="timestamp">2021/12/12 07:22:41+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.936972,-4.587948</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCB007</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_12_dec_21">
+		<SimpleData name="timestamp">2021/12/12 10:43:59+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.939916,-4.579489</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCB023</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_12_dec_21">
+		<SimpleData name="timestamp">2021/12/12 11:03:47+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.937051,-4.587976</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCB067</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_12_dec_21">
+		<SimpleData name="timestamp">2021/12/12 11:16:30+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.938802,-4.580087</coordinates></Point>
+  </Placemark>
+</Folder>
+<Folder><name>Waypoints_24_dec_21</name>
+  <Placemark>
+	<name>FTCH34</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_24_dec_21">
+		<SimpleData name="timestamp">2021/12/24 05:32:32+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.936978,-4.580672</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCE215</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_24_dec_21">
+		<SimpleData name="timestamp">2021/12/24 05:41:05+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.936978,-4.580672</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK809</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_24_dec_21">
+		<SimpleData name="timestamp">2021/12/24 06:20:31+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.936978,-4.580672</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK825</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_24_dec_21">
+		<SimpleData name="timestamp">2021/12/24 06:37:17+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.940479,-4.591877</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCH132</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_24_dec_21">
+		<SimpleData name="timestamp">2021/12/24 06:52:28+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.93916,-4.591241</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK613</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_24_dec_21">
+		<SimpleData name="timestamp">2021/12/24 07:02:43+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.938327,-4.590599</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK606</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_24_dec_21">
+		<SimpleData name="timestamp">2021/12/24 07:14:33+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.938569,-4.590519</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCK611</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_24_dec_21">
+		<SimpleData name="timestamp">2021/12/24 07:23:00+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.938097,-4.590772</coordinates></Point>
+  </Placemark>
+</Folder>
+<Folder><name>Waypoints_02_dec_21</name>
+  <Placemark>
+	<name>FTCH223</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_02_dec_21">
+		<SimpleData name="timestamp">2021/12/02 09:33:49+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.946094,-4.586808</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCH182</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_02_dec_21">
+		<SimpleData name="timestamp">2021/12/02 09:56:09+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.937967,-4.582478</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTC189</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_02_dec_21">
+		<SimpleData name="timestamp">2021/12/02 10:04:35+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.937566,-4.582313</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCF30</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_02_dec_21">
+		<SimpleData name="timestamp">2021/12/02 10:53:39+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.941561,-4.581354</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCF45</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_02_dec_21">
+		<SimpleData name="timestamp">2021/12/02 11:39:38+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.942932,-4.580782</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCF38</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_02_dec_21">
+		<SimpleData name="timestamp">2021/12/02 11:52:40+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.944712,-4.58301</coordinates></Point>
+  </Placemark>
+</Folder>
+<Folder><name>Waypoints_28_dec_21</name>
+  <Placemark>
+	<name>FTCD271</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_28_dec_21">
+		<SimpleData name="timestamp">2021/12/28 06:23:14+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.943489,-4.589868</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ801</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_28_dec_21">
+		<SimpleData name="timestamp">2021/12/28 06:48:42+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.941643,-4.590268</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ770</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_28_dec_21">
+		<SimpleData name="timestamp">2021/12/28 07:05:39+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.94089,-4.590382</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ1342</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_28_dec_21">
+		<SimpleData name="timestamp">2021/12/28 07:49:39+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.944971,-4.588616</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCG145</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_28_dec_21">
+		<SimpleData name="timestamp">2021/12/28 07:58:13+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.945339,-4.58885</coordinates></Point>
+  </Placemark>
+</Folder>
+<Folder><name>Waypoints_30_dec_21</name>
+  <Placemark>
+	<name>FTCJ33</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_30_dec_21">
+		<SimpleData name="timestamp">2021/12/30 05:44:54+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.935868,-4.582504</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ17</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_30_dec_21">
+		<SimpleData name="timestamp">2021/12/30 06:01:58+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.935753,-4.582639</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ70</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_30_dec_21">
+		<SimpleData name="timestamp">2021/12/30 06:16:30+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.934001,-4.583836</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCJ141</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_30_dec_21">
+		<SimpleData name="timestamp">2021/12/30 06:39:37+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.934718,-4.584305</coordinates></Point>
+  </Placemark>
+</Folder>
+<Folder><name>Waypoints_06_jan_22</name>
+  <Placemark>
+	<name>FTCI13</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_06_jan_22">
+		<SimpleData name="timestamp">2022/01/06 10:26:31+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.941036,-4.584145</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCI23</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_06_jan_22">
+		<SimpleData name="timestamp">2022/01/06 10:42:21+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.941038,-4.584143</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCD190</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_06_jan_22">
+		<SimpleData name="timestamp">2022/01/06 11:45:57+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.9415,-4.587318</coordinates></Point>
+  </Placemark>
+</Folder>
+<Folder><name>Waypoints_27_dec_21</name>
+  <Placemark>
+	<name>009</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_27_dec_21">
+		<SimpleData name="timestamp">2021/12/27 07:08:06+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.948399,-4.588561</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>010</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_27_dec_21">
+		<SimpleData name="timestamp">2021/12/27 07:08:19+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.948369,-4.588601</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>011</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_27_dec_21">
+		<SimpleData name="timestamp">2021/12/27 07:08:29+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.948389,-4.588582</coordinates></Point>
+  </Placemark>
+</Folder>
+<Folder><name>Waypoints_03_dec_21</name>
+  <Placemark>
+	<name>FTC68</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_03_dec_21">
+		<SimpleData name="timestamp">2021/12/03 04:50:43+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.943299,-4.581741</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTC118</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_03_dec_21">
+		<SimpleData name="timestamp">2021/12/03 05:07:49+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.943102,-4.582852</coordinates></Point>
+  </Placemark>
+</Folder>
+<Folder><name>Waypoints_23_dec_21</name>
+  <Placemark>
+	<name>FTCE130</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_23_dec_21">
+		<SimpleData name="timestamp">2021/12/23 11:16:19+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.941366,-4.582498</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>FTCE42</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_23_dec_21">
+		<SimpleData name="timestamp">2021/12/23 11:38:25+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.936996,-4.580668</coordinates></Point>
+  </Placemark>
+</Folder>
+<Folder><name>Waypoints_30_nov_21</name>
+  <Placemark>
+	<name>FTCA184</name>
+	<ExtendedData><SchemaData schemaUrl="#Waypoints_30_nov_21">
+		<SimpleData name="timestamp">2021/11/30 10:38:40+00</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>55.946103,-4.587197</coordinates></Point>
+  </Placemark>
+</Folder>
+<Schema name="Waypoints_08_jan_22" id="Waypoints_08_jan_22">
+	<SimpleField name="timestamp" type="string"></SimpleField>
+</Schema>
+<Schema name="Waypoints_12_dec_21" id="Waypoints_12_dec_21">
+	<SimpleField name="timestamp" type="string"></SimpleField>
+</Schema>
+<Schema name="Waypoints_24_dec_21" id="Waypoints_24_dec_21">
+	<SimpleField name="timestamp" type="string"></SimpleField>
+</Schema>
+<Schema name="Waypoints_02_dec_21" id="Waypoints_02_dec_21">
+	<SimpleField name="timestamp" type="string"></SimpleField>
+</Schema>
+<Schema name="Waypoints_28_dec_21" id="Waypoints_28_dec_21">
+	<SimpleField name="timestamp" type="string"></SimpleField>
+</Schema>
+<Schema name="Waypoints_30_dec_21" id="Waypoints_30_dec_21">
+	<SimpleField name="timestamp" type="string"></SimpleField>
+</Schema>
+<Schema name="Waypoints_06_jan_22" id="Waypoints_06_jan_22">
+	<SimpleField name="timestamp" type="string"></SimpleField>
+</Schema>
+<Schema name="Waypoints_27_dec_21" id="Waypoints_27_dec_21">
+	<SimpleField name="timestamp" type="string"></SimpleField>
+</Schema>
+<Schema name="Waypoints_03_dec_21" id="Waypoints_03_dec_21">
+	<SimpleField name="timestamp" type="string"></SimpleField>
+</Schema>
+<Schema name="Waypoints_23_dec_21" id="Waypoints_23_dec_21">
+	<SimpleField name="timestamp" type="string"></SimpleField>
+</Schema>
+<Schema name="Waypoints_30_nov_21" id="Waypoints_30_nov_21">
+	<SimpleField name="timestamp" type="string"></SimpleField>
+</Schema>
+</Document></kml>
