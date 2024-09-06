@@ -94,7 +94,7 @@ data_red <- data %>%
 
 # 2.3. UVC data
 uvc_data <- read.csv("data/SEY23_UVC.csv")
-
+ 
 # 2.3.a. Feeding groups
 uvc_info <- read.csv("data/UVC_info.csv") 
 
