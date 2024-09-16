@@ -67,17 +67,13 @@ cover_data <- read.csv("data/SEY23_Benthic_cover.csv") %>%
 # 2.1. Stable isotope data
 source_SIA <- read.csv("data/SEY23_Source_SIA_data.csv") %>% 
   mutate(Site = str_extract(ID, "[:alpha:]")) %>% 
-  mutate(Source = str_extract(Source, "[:alpha:]+"),
-         PercentN = as.numeric(str_extract(PercentN, "[:digit:]+[.][:digit:]+")),
-         PercentC = as.numeric(str_extract(PercentC, "[:digit:]+[.][:digit:]+"))) %>% 
+  mutate(Source = str_extract(Source, "[:alpha:]+")) %>% 
   left_join(site_data, by = "Site")
 
 crypto_SIA <- read.csv("data/SEY23_Crypto_SIA_data.csv") %>% 
   filter(d15N != "na") %>% 
   mutate(d15N = as.numeric(d15N),
-         d13C = as.numeric(d13C),
-         PercentN = as.numeric(str_extract(PercentN, "[:digit:]+[.][:digit:]+")),
-         PercentC = as.numeric(str_extract(PercentC, "[:digit:]+[.][:digit:]+"))) %>% 
+         d13C = as.numeric(d13C)) %>% 
   select(ID, d15N, d13C)
 
 # 2.2. Main dataset
@@ -734,7 +730,7 @@ pp_check(d13Cmod_source, ndraws = 100)
 # predict values using fitted values
 d13C_source.pred <- source_SIA_mod %>%
   data_grid(taxloc, Site) %>%  
-  add_epred_draws(d13Cmod_source, ndraws = 1000) %>%
+  add_epred_draws(d13Cmod_source, ndraws = 1000, allow_new_levels = T) %>%
   separate(taxloc, c("Source", "Location"), remove = F) %>%
   mutate(ordervar = case_when(Source == "Turf" ~ 1,
                               TRUE ~ 2))
@@ -782,8 +778,8 @@ source.pred.plot <- ggarrange(d15N_source.pred.plot, d13C_source.pred.plot,
                               nrow = 1, ncol = 2, widths = c(1,0.8), hjust = c(-12, 0.4),
                               common.legend = T, legend = "top")
 
-ggsave("figures/FigS2.png", source.pred.plot, width = 6, height = 4, units = "in", dpi = 600)
-ggsave("figures/FigS2.pdf", source.pred.plot, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/FigS2.png", source.pred.plot, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/FigS2.pdf", source.pred.plot, width = 6, height = 4, units = "in", dpi = 600)
 
 source.pred.plot
 ```
