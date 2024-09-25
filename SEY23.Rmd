@@ -99,6 +99,7 @@ GENSPE_lw <- read.csv("data/UVC_lw.csv")
 
 uvc_data <- uvc_data %>% 
   left_join(uvc_info, by = "GENSPE") %>% 
+  left_join(GENSPE_lw, by = c("GENSPE" = "species")) %>% 
   left_join(site_data %>% select(-Area), by = "Site") %>% 
   filter(Site != "R" & Community == "Included") %>% 
   mutate(Area = 2*pi*r^2) %>% 
@@ -2336,8 +2337,6 @@ uvc_biomass.mod_depth.pred.plot <- ggplot(uvc_biomass.mod_depth.pred, aes(x = De
   guides(col = guide_legend(title = "Seabird-nutrient load"),
          fill = guide_legend(title = "CI")) +
   coord_cartesian(ylim = c(0,650), xlim = c(3.5, 11))
-
-uvc_biomass.mod_depth.pred.plot
 ```
 
 ```{r uvc-biomass-depth-herb}
@@ -2370,8 +2369,6 @@ uvc_biomass.mod_Herb.pred.plot <- ggplot(uvc_biomass.mod_Herb.depth.pred, aes(x 
   theme(axis.line = element_line(colour = "black"),
         axis.title.y = element_text(colour = "white"),
         panel.background = element_rect(fill = "transparent"))
-  
-uvc_biomass.mod_Herb.pred.plot
 ```
 
 ```{r uvc-biomass-depth-pisc}
@@ -2402,8 +2399,6 @@ uvc_biomass.mod_Pisc.pred.plot <- ggplot(uvc_biomass.mod_Pisc.depth.pred, aes(x 
         axis.title.y = element_text(colour = "white"),
         panel.background = element_rect(fill = "transparent")) +
   coord_cartesian(ylim = c(0,80), xlim = c(3.5, 11))
-  
-uvc_biomass.mod_Pisc.pred.plot
 ```
 
 ```{r uvc-biomass-depth-inv}
@@ -2433,8 +2428,6 @@ uvc_biomass.mod_Inv.pred.plot <- ggplot(uvc_biomass.mod_Inv.depth.pred, aes(x = 
   theme(axis.line = element_line(colour = "black"),
         panel.background = element_rect(fill = "transparent")) +
   coord_cartesian(ylim = c(0,35), xlim = c(3.5, 11)) 
-
-uvc_biomass.mod_Inv.pred.plot
 ```
 
 ```{r uvc-biomass-depth-plank}
@@ -2465,8 +2458,6 @@ uvc_biomass.mod_Plan.pred.plot <- ggplot(uvc_biomass.mod_Plan.depth.pred, aes(x 
         axis.title.y = element_text(colour = "white"),
         panel.background = element_rect(fill = "transparent")) +
   coord_cartesian(ylim = c(0,35), xlim = c(3.5, 11)) 
-
-uvc_biomass.mod_Plan.pred.plot
 ```
 
 ```{r uvc-biomass-depth-omni}
@@ -2497,8 +2488,6 @@ uvc_biomass.mod_Omni.pred.plot <- ggplot(uvc_biomass.mod_Omni.depth.pred, aes(x 
         axis.title.y = element_text(colour = "white"),
         panel.background = element_rect(fill = "transparent")) +
   coord_cartesian(ylim = c(0,20), xlim = c(3.5, 11)) 
-
-uvc_biomass.mod_Omni.pred.plot
 ```
 
 ```{r uvc-biomass-depth-cora}
@@ -2529,8 +2518,6 @@ uvc_biomass.mod_Cora.pred.plot <- ggplot(uvc_biomass.mod_Cora.depth.pred, aes(x 
         axis.title.y = element_text(colour = "white"),
         panel.background = element_rect(fill = "transparent")) +
   coord_cartesian(ylim = c(0,8), xlim = c(3.5, 11)) 
-
-uvc_biomass.mod_Cora.pred.plot
 ```
 
 ```{r uvc-biomass-depth-carn}
@@ -2561,8 +2548,6 @@ uvc_biomass.mod_Carn.pred.plot <- ggplot(uvc_biomass.mod_Carn.depth.pred, aes(x 
         axis.title.y = element_text(colour = "white"),
         panel.background = element_rect(fill = "transparent")) +
   coord_cartesian(ylim = c(0,40), xlim = c(3.5, 11)) 
-
-uvc_biomass.mod_Carn.pred.plot
 ```
 
 ```{r uvc-biomass-depth-plot}
