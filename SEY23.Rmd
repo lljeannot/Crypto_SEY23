@@ -1047,8 +1047,8 @@ d13C.crypto.depth.pred <- ggarrange(d13C.Enneabel.depth.pred.plot,
                                labels = c("a", "b"),
                                ncol = 2, common.legend = T, hjust = c(-1.3, 0.7), legend = "top")
 
-ggsave("figures/Fig3.png", d13C.crypto.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
-ggsave("figures/Fig3.pdf", d13C.crypto.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
+ggsave("figures/FigS6.png", d13C.crypto.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
+ggsave("figures/FigS6.pdf", d13C.crypto.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
 
 d13C.crypto.depth.pred
 ```
@@ -1249,8 +1249,8 @@ plot.Enneabel.mix <- ggarrange(plot.Enneabel.mix.c + rremove("legend.title"), pl
                                labels = c("a", "b", "c", "d"), vjust = c(0.7, 0.7, -0.4, -0.4),
                                ncol = 2, nrow = 2, common.legend = T, legend = "top") 
 
-ggsave("figures/Fig4.png", plot.Enneabel.mix, width = 6, height = 5, units = "in", dpi = 600)
-ggsave("figures/Fig4.pdf", plot.Enneabel.mix, width = 6, height = 5, units = "in", dpi = 600)
+ggsave("figures/Fig3.png", plot.Enneabel.mix, width = 6, height = 5, units = "in", dpi = 600)
+ggsave("figures/Fig3.pdf", plot.Enneabel.mix, width = 6, height = 5, units = "in", dpi = 600)
 
 plot.Enneabel.mix
 
@@ -1354,8 +1354,8 @@ plot.Eviogutt.mix <- ggarrange(plot.Eviogutt.mix.c + rremove("legend.title"), pl
                                labels = c("a", "b", "c", "d"), vjust = c(0.7, 0.7, -0.4, -0.4),
                                ncol = 2, nrow = 2, common.legend = T, legend = "top") 
 
-ggsave("figures/FigS6.png", plot.Eviogutt.mix, width = 6, height = 5, units = "in", dpi = 600)
-ggsave("figures/FigS6.pdf", plot.Eviogutt.mix, width = 6, height = 5, units = "in", dpi = 600)
+ggsave("figures/FigS7.png", plot.Eviogutt.mix, width = 6, height = 5, units = "in", dpi = 600)
+ggsave("figures/FigS7.pdf", plot.Eviogutt.mix, width = 6, height = 5, units = "in", dpi = 600)
 
 plot.Eviogutt.mix
 ```
@@ -1393,8 +1393,8 @@ iso.plot <- ggarrange(iso.Enneabel +
                       labels = c("a", "b", "c"), vjust = 0.2,
                       common.legend = T, legend = "top")
 
-ggsave("figures/FigS7.png", iso.plot, width = 9, height = 5, units = "in", dpi = 600)
-ggsave("figures/FigS7.pdf", iso.plot, width = 9, height = 5, units = "in", dpi = 600)
+ggsave("figures/FigS8.png", iso.plot, width = 9, height = 5, units = "in", dpi = 600)
+ggsave("figures/FigS8.pdf", iso.plot, width = 9, height = 5, units = "in", dpi = 600)
 ```
 
 # IV. Community effects
@@ -1608,8 +1608,8 @@ com_estimates.plot <- ggarrange(Spr.pred.plot + rremove("y.text"),
 
 com_estimates.plot
 
-ggsave("figures/FigS8.png", com_estimates.plot, width = 6, height = 5, units = "in", dpi = 600)
-ggsave("figures/FigS8.pdf", com_estimates.plot, width = 6, height = 5, units = "in", dpi = 600)
+ggsave("figures/FigS9.png", com_estimates.plot, width = 6, height = 5, units = "in", dpi = 600)
+ggsave("figures/FigS9.pdf", com_estimates.plot, width = 6, height = 5, units = "in", dpi = 600)
 ```
 
 # IV. 2. Community composition - RDA
@@ -1682,8 +1682,8 @@ rda_plot <- ggord(com_RDA, Location, hull = T, ext = c(1.2,1.1), repel = T, vecl
 
 rda_plot
 
-ggsave("figures/FigS9.png", rda_plot, width = 6, height = 6, units = "in", dpi = 600)
-ggsave("figures/FigS9.pdf", rda_plot, width = 6, height = 6, units = "in", dpi = 600)
+ggsave("figures/FigS10.png", rda_plot, width = 6, height = 6, units = "in", dpi = 600)
+ggsave("figures/FigS10.pdf", rda_plot, width = 6, height = 6, units = "in", dpi = 600)
 ```
 
 # V. Species-specific effects
@@ -1939,8 +1939,8 @@ TL_W.plot <- ggarrange(TL.pred.plot, W.pred.plot + rremove("y.text"),
           nrow = 1, ncol = 2, widths = c(1,0.7), hjust = c(-10, 0.3),
           common.legend = T, legend = "top", labels = c("a", "b"))
 
-ggsave("figures/Fig5.png", TL_W.plot, width = 6, height = 4, units = "in", dpi = 600)
-ggsave("figures/Fig5.pdf", TL_W.plot, width = 6, height = 4, units = "in", dpi = 600)
+ggsave("figures/Fig4.png", TL_W.plot, width = 6, height = 4, units = "in", dpi = 600)
+ggsave("figures/Fig4.pdf", TL_W.plot, width = 6, height = 4, units = "in", dpi = 600)
 
 TL_W.plot
 ```
@@ -2008,8 +2008,8 @@ rda_uvc.plot <- ggord(uvc_RDA, Location, hull = T, ext = 1.05, repel = T, veclsz
 
 rda_uvc.plot
 
-ggsave("figures/FigS10.png", rda_uvc.plot, width = 6, height = 6, units = "in", dpi = 600)
-ggsave("figures/FigS10.pdf", rda_uvc.plot, width = 6, height = 6, units = "in", dpi = 600)
+ggsave("figures/FigS11.png", rda_uvc.plot, width = 6, height = 6, units = "in", dpi = 600)
+ggsave("figures/FigS11.pdf", rda_uvc.plot, width = 6, height = 6, units = "in", dpi = 600)
 ```
 
 # VI. 2. Biomass
@@ -2573,6 +2573,6 @@ uvc_biomass_depth.plot <- ggarrange(
   labels = c("a", "b", rep("", 14)),
   common.legend = T, legend = "top")
 
-ggsave("figures/Fig6.png", uvc_biomass_depth.plot, width = 6, height = 8, units = "in", dpi = 600)
-ggsave("figures/Fig6.pdf", uvc_biomass_depth.plot, width = 6, height = 8, units = "in", dpi = 600)
+ggsave("figures/Fig5.png", uvc_biomass_depth.plot, width = 6, height = 8, units = "in", dpi = 600)
+ggsave("figures/Fig5.pdf", uvc_biomass_depth.plot, width = 6, height = 8, units = "in", dpi = 600)
 ```
