@@ -8,7 +8,7 @@
 
 ## 1. How to download this project?
 
-On the project main page on GitHub, click on the green button `Code` and then click on `Download ZIP`.
+On the project main page on Anonymous GitHub, click on the button `Download Repository` and then extract the ZIP folder.
 
 
 
