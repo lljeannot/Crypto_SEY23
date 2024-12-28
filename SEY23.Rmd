@@ -27,15 +27,19 @@ library(cowplot)
 library(ggnewscale)
 library(grid)
 library(rnaturalearth)
+library(gstat)
+library(metR)
 library(magick)
 library(ggplot2)
 library(viridis)
 library(sf)
+library(stars)
 library(raster)
 library(vegan)
 library(ggord)
 library(labdsv)
 library(ggpubr)
+library(coda)
 library(brms)
 library(tidybayes)
 library(rfishbase)
@@ -199,10 +203,12 @@ main_map <- ggplot()+
 # 3.2 Fregate map 
 
 cropped_F <- st_crop(worldmap, xmin = 55.93, xmax = 55.97, ymin = -4.575, ymax = -4.588)
+ocean_cropped_F <- st_crop(ocean,xmin = 55.93, xmax = 55.97, ymin = -4.578, ymax = -4.588)
 
 CP_F <- as(extent(55.93, 55.97, -4.588, -4.575), "SpatialPolygons")
 proj4string(CP_F) <- CRS(proj4string(as_Spatial(shp)))
-out_F <- st_intersection(st_as_sf(shp), st_as_sf(CP_F), byid=TRUE)
+out_F <- st_intersection(st_as_sf(shp), st_as_sf(CP_F), byid = TRUE)
+ocean_F <- st_difference(ocean_cropped_F, out_F)
 
 # 3.2.1 Noddy data
 
@@ -259,7 +265,35 @@ noddy_K_val <- rep(11.801, 41)
 noddy_K$Description <- noddy_K_val
 
 noddy <- rbind(noddy_A, noddy_B1, noddy_B2, noddy_C, noddy_D, noddy_E, noddy_F, noddy_G, noddy_H1, noddy_H2, noddy_I, noddy_J, noddy_K)
+noddy <- noddy[st_geometry_type(noddy) == "POINT", ]
 cropped_noddy <- st_crop(noddy, xmin = 55.93, xmax = 55.97, ymin = -4.575, ymax = -4.588)
+
+# Define grid for interpolation
+grid <- st_make_grid(out_F, n = c(60, 60))  
+grid_sf <- st_sf(geometry = grid)
+grid_sf$Description <- 0 
+
+grid_with_points <- st_join(grid_sf, cropped_noddy, left = TRUE)
+
+grid_with_points$Description <- ifelse(
+  !is.na(grid_with_points$Description.y),  
+  grid_with_points$Description.y,          
+  grid_with_points$Description.x           
+)
+
+grid_with_points <- grid_with_points %>%
+  select(geometry, Description)
+
+# Inverse distance weighted interpolation
+g <- gstat::gstat(formula = Description ~ 1, locations = grid_with_points, set = list(idp = 1)) 
+idw_result <- predict(g, grid_with_points) #takes a long time
+
+interp_df <- as.data.frame(idw_result, xy = TRUE) %>%
+  mutate(var1.pred = as.numeric(var1.pred)) %>%
+  filter(!is.na(var1.pred) & is.finite(var1.pred)) %>%
+  mutate(x = round(x, 5), y = round(y, 5)) %>% 
+  select(x, y, var1.pred) %>% 
+  distinct()
 
 # 3.2.2 Contours
 contours <- st_read("data/contours.kml") %>% st_as_sf() %>% 
@@ -267,20 +301,24 @@ contours <- st_read("data/contours.kml") %>% st_as_sf() %>%
 
 contours_clipped <- st_intersection(contours, out_F)
 
+# Fregate map
+library(ggspatial)
+
 map_F <- ggplot() +
   theme_bw() +
   coord_map() + 
   geom_sf(data = out_F, fill = "grey") +
-  geom_sf(data = contours_clipped, aes(geometry = geometry), alpha = 0.15) +  # Plot contour lines
-  geom_sf(data = cropped_noddy, aes(fill = as.numeric(Description)), shape = 21, alpha = 0.2, col = "transparent") +
+  geom_contour_fill(aes(x = x, y = y, z = var1.pred, fill = after_stat(level_mid)), bins = 10, data = interp_df) +
+  geom_sf(data = contours_clipped, aes(geometry = geometry), alpha = 0.15) +  
+  geom_sf(data = ocean_F, fill = "white", color = "NA") +
+  geom_sf(data = out_F, fill = "transparent") +
   geom_point(data = site_data, aes(y = Lat, x = Lon, col = Depth, shape = Community), size = 2) +
-  scale_fill_distiller(type = "seq",
-                        direction = 1,
-                        palette = "Blues", guide = "colourbar") +
-  scale_color_viridis(option = "D", direction = -1) +
-  annotate(geom = "text", x = 55.946, y = -4.5805, label = "La Cour Beach", fontface = "italic", color = "black", size = 2.7) +
+  annotate(geom = "text", x = 55.948, y = -4.5806, label = "La Cour Beach", fontface = "italic", color = "black", size = 2.7) +
   annotate(geom = "text", x = 55.9314, y = -4.5800, label = "Anse Victorin", fontface = "italic", color = "black", size = 2.7) +
   annotate(geom = "text", x = 55.96, y = -4.5822, label = "Mahé", fontface = "italic", color = "black", size = 3) +
+  scale_fill_distiller(palette = "Blues", direction = 1) +
+  scale_color_viridis(option = "D", direction = -1) +
+  annotation_scale(data = out_F, location = "bl", width_hint = 0.05, height = unit(0.2, "cm"), text_cex = 0.5, text_pad = unit(0.15, "cm")) +
   labs(color = bquote("Depth ("*m^phantom("/")* ") "), 
        fill = bquote("Lesser noddy density (\U00B7" ~10^3~ " / ha)"), 
        shape = bquote("Community ecology analysi"*s^phantom("/") ~ " ")) +
@@ -291,14 +329,18 @@ map_F <- ggplot() +
         axis.title.x = element_blank(), axis.title.y = element_blank(),
         legend.spacing.y = unit(0.01, 'cm'), legend.spacing.x = unit(0.8, "cm"), panel.grid = element_blank())
 
+map_F
+
 # 3.3 Inset map
 
 map_fig <- ggdraw() +
   draw_plot(map_F) +
   draw_plot(main_map, x = 0.625, y = 0.17, width = 0.36) 
 
-ggsave("figures/Fig1.png", map_fig, width = 6, height = 3, units = "in", dpi = 600)
-ggsave("figures/Fig1.pdf", map_fig, width = 6, height = 3, units = "in", dpi = 600)
+map_fig
+
+#ggsave("figures/Fig1.png", map_fig, width = 6, height = 3, units = "in", dpi = 600)
+#ggsave("figures/Fig1.pdf", map_fig, width = 6, height = 3, units = "in", dpi = 600)
 ```
 # Fig S1 - White tern density
 
@@ -318,17 +360,52 @@ cropped_tern <- tern %>%
   filter(!(Description %in% c(0, NA))) %>% 
   st_crop(xmin = 55.93, xmax = 55.955, ymin = -4.575, ymax = -4.588)
 
+grid_noddy <- as(extent(55.93, 55.97, -4.588, -4.575), "SpatialPolygons")
+
+grid <- st_make_grid(out_F, n = c(8, 8))  
+grid_sf <- st_sf(geometry = grid)
+grid_sf$Description <- 0 
+
+grid_with_points <- st_join(grid_sf, cropped_tern, left = TRUE)
+
+grid_with_points$Description <- ifelse(
+  !is.na(grid_with_points$Description.y),  
+  grid_with_points$Description.y,          
+  grid_with_points$Description.x           
+)
+
+grid_with_points <- grid_with_points %>%
+  select(geometry, Description)
+
+# Inverse distance weighted interpolation
+g <- gstat::gstat(formula = Description ~ 1, locations = grid_with_points, set = list(idp = 2)) 
+idw_result_tern <- predict(g, grid_with_points) #takes several minutes
+
+#coords_idw_result_tern <- st_coordinates(idw_result_tern)
+
+interp_df <- as.data.frame(idw_result_tern, xy = TRUE) %>%
+  mutate(var1.pred = as.numeric(var1.pred)) %>%
+  filter(!is.na(var1.pred) & is.finite(var1.pred)) %>%
+  mutate(x = round(x, 5), y = round(y, 5)) %>% 
+  select(x, y, var1.pred) %>% 
+  distinct()
+
+str(interp_df)
+#, x = round(coords_idw_result_tern[, 1], 2), 
+         #y = round(coords_idw_result_tern[, 2], 2)
+
+ocean_cropped_F <- st_crop(ocean,xmin = 55.93, xmax = 55.955, ymin = -4.578, ymax = -4.588)
+ocean_F <- st_difference(ocean_cropped_F, out_F)
 
 map_S1 <- ggplot() +
   theme_bw() +
   coord_map() + 
-  geom_sf(data = out_F, fill = "grey") +
-  geom_sf(data = contours_clipped, aes(geometry = geometry), alpha = 0.15) +  # Plot contour lines
-  geom_sf(data = cropped_tern, aes(fill = as.numeric(Description)), shape = 21, alpha = 0.8, col = "transparent", size = 2) +
-  scale_fill_distiller(type = "seq",
-                        direction = 1,
-                        palette = "Blues", guide = "colourbar") +
-  scale_color_viridis(option = "D", direction = -1) +
+  geom_contour_fill(aes(x = x, y = y, z = var1.pred, fill = after_stat(level_mid)), data = interp_df) +
+  geom_sf(data = contours_clipped, aes(geometry = geometry), alpha = 0.15) +
+  geom_sf(data = ocean_F, fill = "white", color = "NA") +
+  geom_sf(data = out_F, fill = "transparent") +
+  scale_fill_distiller(direction = 1,
+                        palette = "Blues") +
   annotate(geom = "text", x = 55.946, y = -4.5805, label = "La Cour Beach", fontface = "italic", color = "black", size = 2.7) +
   annotate(geom = "text", x = 55.934, y = -4.5800, label = "Anse Victorin", fontface = "italic", color = "black", size = 2.7) +
   labs(color = bquote("Depth ("*m^phantom("/")* ") "), 
@@ -343,8 +420,8 @@ map_S1 <- ggplot() +
 
 map_S1
 
-ggsave("figures/FigS1.png", map_S1, width = 6, height = 4, units = "in", dpi = 600)
-ggsave("figures/FigS1.pdf", map_S1, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/FigS1.png", map_S1, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/FigS1.pdf", map_S1, width = 6, height = 4, units = "in", dpi = 600)
 ```
 
 # Site comparability
@@ -396,14 +473,19 @@ source_SIA_mod <- source_SIA %>%
                               TRUE ~ 2),
          taxloc = factor(interaction(Source, Location)))
 
-d15Nmod_source <- brm(d15N ~ taxloc + (1|Site), data = source_SIA_mod)
+d15Nmod_source <- brm(d15N ~ taxloc + (1|Site), iter = 8000, warmup = 4000, cores = 4, data = source_SIA_mod)
 
 # model summary
-summary(d15Nmod_source)
+summary(d15Nmod_source) 
 
 # assess model fit
 #plot(d15Nmod_source)
 pp_check(d15Nmod_source, ndraws = 100)
+
+summary(rhat(d15Nmod_source)) #gelman
+geweke_res <- as.mcmc(d15Nmod_source) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
 
 # predict values using fitted values
 d15N_source.pred <- source_SIA_mod %>%
@@ -422,28 +504,39 @@ contrasts_d15N.source <- contrast(em_d15N.source, method = "tukey") %>%
   mutate(contrast = str_sub(contrast1, 1, 4))
 
 contrasts_d15N.source
+hypothesis(d15Nmod_source, "0 > taxlocSponge.Low")
+test <- hypothesis(d15Nmod_source, "taxlocTurf.High > taxlocTurf.Low")
+print(test, digits = 6) 
 ```
 
 # Fig S2. a - d15N across both sources
 
 ```{r d15N-source-plot}
 
-d15N_source.pred.plot <- ggplot(data = d15N_source.pred) + 
+d15N_source.pred.plot1 <- ggplot(data = d15N_source.pred) + 
   stat_slab(aes(y = reorder(Source, ordervar, decreasing = T), x = .epred, fill = Location, col = Location,
                    group = Location), height = 0.8, slab_linewidth = 0.7, orientation = "horizontal") +
-  geom_jitter(data = source_SIA_mod %>% filter(!is.na(Source)), aes(x = d15N, y = Source, fill = Location),
-              size = 1, pch = 21, col = "black", height = 0.1, alpha = 0.3) +
+  geom_jitter(data = source_SIA_mod %>% filter(!is.na(Source))  %>% 
+                mutate(Source = case_when(Source == "Turf" ~ "2",
+                                          Source == "Sponge" ~ "1",
+                                          TRUE ~ NA), 
+                         Source = as.numeric(Source)), aes(x = d15N, y = Source + 0.2, fill = Location),
+              size = 1.1, pch = 21, col = "black", height = 0.2, alpha = 0.7) +
   stat_pointinterval(aes(y = reorder(Source, ordervar, decreasing = T), x = .epred, fill = Location, col = Location), 
                      point_size = 1.5, pch = 21, col = "black", position = position_dodge(width = 0.4, preserve = "single")) +
-  scale_color_manual(values = c("#0067A4", "#BF0033")) +
-  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
+  scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.5)) +
+  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.3)) +
   theme(axis.title.y = element_blank(),
+        axis.ticks.y = element_blank(),
         legend.position = c(0.87, 0.9),
         axis.line = element_line(colour = "black"),
         panel.background = element_rect(fill = "transparent")) +
   labs(x = bquote("" ~delta^15~"N")) +
   guides(fill = guide_legend(nrow = 1, title = "Seabird-nutrient load"),
          col = guide_legend(nrow = 1, title = "Seabird-nutrient load"))
+
+d15N_source.pred.plot
+d15N_source.pred.plot1
 ```
 
 # I. 1. b. Effect of depth on source d15N
@@ -451,8 +544,8 @@ d15N_source.pred.plot <- ggplot(data = d15N_source.pred) +
 ```{r d15N-source-depth}
 
 # model d15N across each source with depth as a fixed effect
-d15Nmod_Turf <- brm(d15N ~ Location + Location:Depth + (1|Site), data = source_SIA %>% filter(Source == "Turf"))
-d15Nmod_Sponge <- brm(d15N ~ Location + Location:Depth + (1|Site), data = source_SIA %>% filter(Source == "Sponge"))
+d15Nmod_Turf <- brm(d15N ~ Location + Location:Depth + (1|Site), iter = 10000, warmup = 5000, cores = 4, data = source_SIA %>% filter(Source == "Turf"))
+d15Nmod_Sponge <- brm(d15N ~ Location + Location:Depth + (1|Site), iter = 8000, warmup = 4000, cores = 4, data = source_SIA %>% filter(Source == "Sponge"))
 
 # model summary
 summary(d15Nmod_Turf)
@@ -463,6 +556,20 @@ summary(d15Nmod_Sponge)
 pp_check(d15Nmod_Turf, ndraws = 100)
 #plot(d15Nmod_Sponge)
 pp_check(d15Nmod_Sponge, ndraws = 100)
+
+summary(rhat(d15Nmod_Turf)) #gelman
+geweke_res <- as.mcmc(d15Nmod_Turf) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
+
+summary(rhat(d15Nmod_Sponge)) #gelman
+geweke_res <- as.mcmc(d15Nmod_Sponge) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
+
+parnames(d15Nmod_Turf)
+hypothesis(d15Nmod_Turf, "LocationHigh:Depth < LocationLow:Depth")
+hypothesis(d15Nmod_Turf, "LocationLow:Depth + LocationLow < 0")
 ```
 
 # Fig S3. a - turf d15N according to depth
@@ -518,7 +625,7 @@ d15N.sponge.depth.pred.plot <- ggplot(d15N.sponge.depth.pred, aes(x = Depth, y =
          fill = guide_legend(title = "Seabird-nutrient load"))
 ```
 
-# Fig S3 - Combine both graphs
+# Fig S2 - Combine both graphs
 
 ```{r d15N-source-depth-plot}
 
@@ -529,8 +636,8 @@ d15N.source.depth.pred <- ggarrange(d15N.turf.depth.pred.plot,
 
 d15N.source.depth.pred
 
-ggsave("figures/FigS3.png", d15N.source.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
-ggsave("figures/FigS3.pdf", d15N.source.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/FigS2.png", d15N.source.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/FigS2.pdf", d15N.source.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
 
 ```
 
@@ -543,12 +650,12 @@ ggsave("figures/FigS3.pdf", d15N.source.depth.pred, width = 6, height = 4, units
 # model
 crypto_SIA_mod <- data %>%
   filter(GENSPE %in% c("Enneabel", "Cirrfila", "Eviogutt")) %>%
-  mutate(ordervar = case_when(GENSPE == "Enneabel" ~ 1,
-                              GENSPE == "Eviogutt" ~ 2,
+  mutate(ordervar = case_when(GENSPE == "Eviogutt" ~ 1,
+                              GENSPE == "Enneabel" ~ 2,
                               TRUE ~ 3),
          taxloc = factor(interaction(GENSPE, Location)))
 
-d15Nmod_crypto <- brm(d15N ~ taxloc + (1|Site), data = crypto_SIA_mod)
+d15Nmod_crypto <- brm(d15N ~ 0 + taxloc + (1|Site), data = crypto_SIA_mod)
 
 # model summary
 summary(d15Nmod_crypto)
@@ -557,13 +664,18 @@ summary(d15Nmod_crypto)
 #plot(d15Nmod_crypto)
 pp_check(d15Nmod_crypto, ndraws = 100)
 
+summary(rhat(d15Nmod_crypto)) #gelman
+geweke_res <- as.mcmc(d15Nmod_crypto) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
+
 # predict values using fitted values
 d15N_crypto.pred <- crypto_SIA_mod %>%
   data_grid(taxloc, Location, Site) %>%  
   add_epred_draws(d15Nmod_crypto, ndraws = 1000, allow_new_levels = T) %>%
   separate(taxloc, c("GENSPE", "Location"), remove = F) %>%
-  mutate(ordervar = case_when(GENSPE == "Enneabel" ~ 1,
-                              GENSPE == "Eviogutt" ~ 2,
+  mutate(ordervar = case_when(GENSPE == "Eviogutt" ~ 1,
+                              GENSPE == "Enneabel" ~ 2,
                               T ~ 3))
 
 # contrasts
@@ -575,6 +687,10 @@ contrasts_d15N.crypto <- contrast(em_d15N.crypto, method = "tukey") %>%
   mutate(contrast = str_sub(contrast1, 1, 8))
 
 contrasts_d15N.crypto
+
+hypothesis(d15Nmod_crypto, "taxlocEviogutt.Low < taxlocEviogutt.High")
+hypothesis(d15Nmod_crypto, "taxlocEnneabel.Low < taxlocEnneabel.High")
+hypothesis(d15Nmod_crypto, "taxlocCirrfila.Low < taxlocCirrfila.High")
 ```
 
 # Fig 2. a - d15N across all three species
@@ -589,18 +705,19 @@ d15N_crypto.pred.plot <- ggplot(data = d15N_crypto.pred %>%
   stat_slab(aes(y = reorder(GENSPE, ordervar, decreasing = T), x = .epred, fill = Location, col = Location,
                    group = Location), height = 0.8, slab_linewidth = 0.7, orientation = "horizontal") +
   geom_jitter(data = crypto_SIA_mod %>% 
-                mutate(GENSPE = case_when(GENSPE == "Enneabel" ~ "Enneapterygius abeli",
-                                          GENSPE == "Eviogutt" ~ "Eviota guttata",
-                                          GENSPE == "Cirrfila" ~ "Cirripectes filamentosus",
-                                          TRUE ~ NA_character_)), aes(x = d15N, y = GENSPE, fill = Location),
-              size = 1, pch = 21, col = "black", height = 0.1, alpha = 0.3) +
+                mutate(GENSPE = case_when(GENSPE == "Eviogutt" ~ "3",
+                                          GENSPE == "Enneabel" ~ "2",
+                                          GENSPE == "Cirrfila" ~ "1",
+                                          TRUE ~ NA), 
+                         GENSPE = as.numeric(GENSPE)), aes(x = d15N, y = GENSPE + 0.2, fill = Location),
+              size = 1.2, pch = 21, col = "black", height = 0.2, alpha = 0.7) +
   stat_pointinterval(aes(y = reorder(GENSPE, ordervar, decreasing = T), x = .epred, fill = Location, col = Location), 
                      point_size = 1.5, pch = 21, col = "black", position = position_dodge(width = 0.4, preserve = "single")) +
-  annotation_custom(img_Enneabel, xmin = 5, xmax = 7.1, ymin = 3, ymax = 3.5) +
-  annotation_custom(img_Eviogutt, xmin = 5, xmax = 7.1, ymin = 2, ymax = 2.5) +
+  annotation_custom(img_Eviogutt, xmin = 5, xmax = 7.1, ymin = 3, ymax = 3.5) +
+  annotation_custom(img_Enneabel, xmin = 5, xmax = 7.1, ymin = 2, ymax = 2.5) +
   annotation_custom(img_Cirrfila, xmin = 5, xmax = 7.1, ymin = 1, ymax = 1.5) +
-  scale_color_manual(values = c("#0067A4", "#BF0033")) +
-  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
+  scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.5)) +
+  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.3)) +
   theme(axis.line = element_line(colour = "black"),
         axis.title.y = element_blank(),
         axis.ticks.y = element_blank(),
@@ -620,7 +737,8 @@ d15N_crypto.pred.plot
 ```{r d15N-crypto-depth}
 
 # model for Enneapterygius abeli
-d15Nmod_Enneabel <- brm(d15N ~ Location + Location:Depth + (1|Site), data = crypto_SIA_mod %>% filter(GENSPE == "Enneabel"),
+d15Nmod_Enneabel <- brm(d15N ~ Location + Location:Depth + (1|Site), iter = 8000, warmup = 4000, cores = 4, 
+                        data = crypto_SIA_mod %>% filter(GENSPE == "Enneabel"),
                         control = list(adapt_delta = 0.9))
 d15Nmod_Eviogutt <- brm(d15N ~ Location + Location:Depth + (1|Site), data = crypto_SIA_mod %>% filter(GENSPE == "Eviogutt"),
                         control = list(adapt_delta = 0.9))
@@ -634,6 +752,16 @@ summary(d15Nmod_Eviogutt)
 pp_check(d15Nmod_Enneabel, ndraws = 100)
 #plot(d15Nmod_Eviogutt)
 pp_check(d15Nmod_Eviogutt, ndraws = 100)
+
+summary(rhat(d15Nmod_Enneabel)) #gelman
+geweke_res <- as.mcmc(d15Nmod_Enneabel) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
+
+summary(rhat(d15Nmod_Eviogutt)) #gelman
+geweke_res <- as.mcmc(d15Nmod_Eviogutt) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
 ```
 
 # Fig S3. a - Enneapterygius abeli d15N according to depth
@@ -691,7 +819,7 @@ d15N.Eviogutt.depth.pred.plot <- ggplot(d15N.Eviogutt.depth.pred, aes(x = Depth,
 d15N.Eviogutt.depth.pred.plot
 ```
 
-# Fig S4 - Combine the two graphs
+# Fig S3 - Combine the two graphs
 
 ```{r d15N-crypto-depth-plot}
 
@@ -700,8 +828,8 @@ d15N.crypto.depth.pred <- ggarrange(d15N.Enneabel.depth.pred.plot,
                                labels = c("a", "b"),
                                ncol = 2, common.legend = T, legend = "top")
 
-ggsave("figures/FigS4.png", d15N.crypto.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
-ggsave("figures/FigS4.pdf", d15N.crypto.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/FigS3.png", d15N.crypto.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/FigS3.pdf", d15N.crypto.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
 ```
 
 # II. Stable isotope analysis - d13C
@@ -718,7 +846,7 @@ source_SIA_mod <- source_SIA %>%
                               TRUE ~ 2),
          taxloc = factor(interaction(Source, Location)))
 
-d13Cmod_source <- brm(d13C ~ taxloc + (1|Site), data = source_SIA_mod, 
+d13Cmod_source <- brm(d13C ~ taxloc + (1|Site), data = source_SIA_mod, iter = 8000, warmup = 4000, cores = 4, 
                       control = list(adapt_delta = 0.9))
 
 # model summary
@@ -727,6 +855,11 @@ summary(d13Cmod_source)
 # assess model fit
 #plot(d13Cmod_source)
 pp_check(d13Cmod_source, ndraws = 100)
+
+summary(rhat(d13Cmod_source)) #gelman
+geweke_res <- as.mcmc(d13Cmod_source) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
 
 # predict values using fitted values
 d13C_source.pred <- source_SIA_mod %>%
@@ -747,19 +880,23 @@ contrasts_d13C.source <- contrast(em_d13C.source, method = "tukey") %>%
 contrasts_d13C.source
 ```
 
-# Fig S2. b - d13C across both sources
+# Fig 2. d13C across both sources
 
 ```{r d13C-source-plot}
 
 d13C_source.pred.plot <- ggplot(data = d13C_source.pred) +
   stat_slab(aes(y = reorder(Source, ordervar, decreasing = T), x = .epred, fill = Location, col = Location, 
                    group = Location), height = 0.8, slab_linewidth = 0.7, orientation = "horizontal") +
-  geom_jitter(data = source_SIA_mod, aes(x = d13C, y = Source, fill = Location),
-              size = 1, pch = 21, col = "black", height = 0.1, alpha = 0.3) +
+  geom_jitter(data = source_SIA_mod  %>% 
+                mutate(Source = case_when(Source == "Turf" ~ "2",
+                                          Source == "Sponge" ~ "1",
+                                          TRUE ~ NA),
+                       Source = as.numeric(Source)), aes(x = d13C, y = Source + 0.2, fill = Location),
+              size = 1.1, pch = 21, col = "black", height = 0.1, alpha = 0.7) +
   stat_pointinterval(aes(y = reorder(Source, ordervar, decreasing = T), x = .epred, fill = Location, col = Location), 
                      point_size = 1.5, pch = 21, col = "black", position = position_dodge(width = 0.4, preserve = "single")) +
-  scale_color_manual(values = c("#0067A4", "#BF0033")) +
-  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
+  scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.5)) +
+  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.3)) +
   theme(axis.title.y = element_blank(),
         axis.ticks.y = element_blank(),
         axis.text.y = element_blank(),
@@ -769,20 +906,7 @@ d13C_source.pred.plot <- ggplot(data = d13C_source.pred) +
   labs(x = bquote("" ~delta^13~"C")) +
   guides(fill = guide_legend(nrow = 1, title = "Seabird-nutrient load"),
          col = guide_legend(nrow = 1, title = "Seabird-nutrient load"))
-```
 
-# Fig S2 - Combine d15N and d13C across both sources
-
-```{r d13C-d15N-source}
-
-source.pred.plot <- ggarrange(d15N_source.pred.plot, d13C_source.pred.plot,
-                              nrow = 1, ncol = 2, widths = c(1,0.8), hjust = c(-12, 0.4),
-                              common.legend = T, legend = "top")
-
-#ggsave("figures/FigS2.png", source.pred.plot, width = 6, height = 4, units = "in", dpi = 600)
-#ggsave("figures/FigS2.pdf", source.pred.plot, width = 6, height = 4, units = "in", dpi = 600)
-
-source.pred.plot
 ```
 
 # II. 1. b. Effect of depth on source d13C
@@ -792,11 +916,21 @@ source.pred.plot
 # model d13C across each source with depth as a fixed effect
 d13Cmod_Turf <- brm(d13C ~ Location + Location:Depth + (1|Site), data = source_SIA %>% filter(Source == "Turf"))
 d13Cmod_Sponge <- brm(d13C ~ Location + Location:Depth + (1|Site), data = source_SIA %>% filter(Source == "Sponge"),
-                      control = list(adapt_delta = 0.99))
+                      iter = 8000, warmup = 4000, cores = 4, control = list(adapt_delta = 0.99))
 
 # model summary
 summary(d13Cmod_Turf)
 summary(d13Cmod_Sponge)
+
+summary(rhat(d13Cmod_Turf)) #gelman
+geweke_res <- as.mcmc(d13Cmod_Turf) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
+
+summary(rhat(d13Cmod_Sponge)) #gelman
+geweke_res <- as.mcmc(d13Cmod_Sponge) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
 
 # assess model fit
 #plot(d13Cmod_Turf)
@@ -805,7 +939,7 @@ pp_check(d13Cmod_Turf, ndraws = 100)
 pp_check(d13Cmod_Sponge, ndraws = 100)
 ```
 
-# Fig S5. a - turf d13C according to depth
+# Fig S4. a - turf d13C according to depth
 
 ```{r d13C-turf-depth}
 
@@ -831,7 +965,7 @@ d13C.turf.depth.pred.plot <- ggplot(d13C.turf.depth.pred, aes(x = Depth, y = d13
          fill = guide_legend(title = "Seabird-nutrient load"))
 ```
 
-# Fig S5. b - sponge d13C according to depth
+# Fig S4. b - sponge d13C according to depth
 
 ```{r d13C-sponge-depth}
 
@@ -868,8 +1002,8 @@ d13C.source.depth.pred <- ggarrange(d13C.turf.depth.pred.plot,
                                     hjust = c(-2, 0.3),
                                     ncol = 2, common.legend = T, legend = "top")
 
-ggsave("figures/FigS5.png", d13C.source.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
-ggsave("figures/FigS5.pdf", d13C.source.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/FigS4.png", d13C.source.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/FigS4.pdf", d13C.source.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
 ```
 
 # II. 2. Cryptobenthic fish
@@ -881,12 +1015,12 @@ ggsave("figures/FigS5.pdf", d13C.source.depth.pred, width = 6, height = 4, units
 # model
 crypto_SIA_mod <- data %>%
   filter(GENSPE %in% c("Enneabel", "Cirrfila", "Eviogutt")) %>%
-  mutate(ordervar = case_when(GENSPE == "Enneabel" ~ 1,
-                              GENSPE == "Eviogutt" ~ 2,
+  mutate(ordervar = case_when(GENSPE == "Eviogutt" ~ 1,
+                              GENSPE == "Enneabel" ~ 2,
                               TRUE ~ 3),
          taxloc = factor(interaction(GENSPE, Location)))
 
-d13Cmod_crypto <- brm(d13C ~ taxloc + (1|Site), data = crypto_SIA_mod)
+d13Cmod_crypto <- brm(d13C ~ 0 + taxloc + (1|Site), iter = 8000, warmup = 4000, cores = 4, data = crypto_SIA_mod)
 
 # model summary
 summary(d13Cmod_crypto)
@@ -895,13 +1029,18 @@ summary(d13Cmod_crypto)
 #plot(d13Cmod_crypto)
 pp_check(d13Cmod_crypto, ndraws = 100)
 
+summary(rhat(d13Cmod_crypto)) #gelman
+geweke_res <- as.mcmc(d13Cmod_crypto) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
+
 # predict values using fitted values
 d13C_crypto.pred <- crypto_SIA_mod %>%
   data_grid(taxloc, Location, Site) %>%  
   add_epred_draws(d13Cmod_crypto, ndraws = 1000, allow_new_levels = T) %>%
   separate(taxloc, c("GENSPE", "Location"), remove = F) %>%
-  mutate(ordervar = case_when(GENSPE == "Enneabel" ~ 1,
-                              GENSPE == "Eviogutt" ~ 2,
+  mutate(ordervar = case_when(GENSPE == "Eviogutt" ~ 1,
+                              GENSPE == "Enneabel" ~ 2,
                               TRUE ~ 3))
 # contrasts
 em_d13C.crypto <- emmeans(d13Cmod_crypto,  ~ taxloc)
@@ -912,29 +1051,33 @@ contrasts_d13C.crypto <- contrast(em_d13C.crypto, method = "tukey") %>%
   mutate(contrast = str_sub(contrast1, 1, 8))
 
 contrasts_d13C.crypto
+hypothesis(d13Cmod_crypto, hypothesis = "taxlocEnneabel.Low < taxlocEnneabel.High")
+hypothesis(d13Cmod_crypto, hypothesis = "taxlocEviogutt.Low < taxlocEviogutt.High")
+hypothesis(d13Cmod_crypto, hypothesis = "taxlocCirrfila.Low < taxlocCirrfila.High")
 ```
 
-# Fig 2. b - d13C across all three species
+# Fig 2. d - d13C across all three species
 
 ```{r d13C-crypto-plot}
 
 d13C_crypto.pred.plot <- ggplot(data = d13C_crypto.pred %>% 
-                mutate(GENSPE = case_when(GENSPE == "Enneabel" ~ "Enneapterygius abeli",
-                                          GENSPE == "Eviogutt" ~ "Eviota guttata",
+                mutate(GENSPE = case_when(GENSPE == "Eviogutt" ~ "Eviota guttata",
+                                          GENSPE == "Enneabel" ~ "Enneapterygius abeli",
                                           GENSPE == "Cirrfila" ~ "Cirripectes filamentosus",
                                           TRUE ~ NA_character_))) +
   stat_slab(aes(y = reorder(GENSPE, ordervar, decreasing = T), x = .epred, fill = Location, col = Location,
                    group = Location), height = 0.8, slab_linewidth = 0.7, orientation = "horizontal") +
   geom_jitter(data = crypto_SIA_mod %>% 
-                mutate(GENSPE = case_when(GENSPE == "Enneabel" ~ "Enneapterygius abeli",
-                                          GENSPE == "Eviogutt" ~ "Eviota guttata",
-                                          GENSPE == "Cirrfila" ~ "Cirripectes filamentosus",
-                                          TRUE ~ NA_character_)), aes(x = d13C, y = GENSPE, fill = Location),
-              size = 1, pch = 21, col = "black", height = 0.1, alpha = 0.3) +
-  stat_pointinterval(aes(y = reorder(GENSPE, ordervar, decreasing = T), x = .epred, fill = Location, col = Location), 
+                mutate(GENSPE = case_when(GENSPE == "Eviogutt" ~ "3",
+                                          GENSPE == "Enneabel" ~ "2",
+                                          GENSPE == "Cirrfila" ~ "1",
+                                          TRUE ~ NA),
+                       GENSPE = as.numeric(GENSPE)), aes(x = d13C, y = GENSPE + 0.2, fill = Location),
+              size = 1.2, pch = 21, col = "black", height = 0.2, alpha = 0.7) +
+  stat_pointinterval(aes(y = reorder(GENSPE, ordervar, decreasing = T), x = .epred, fill = Location, col = Location),
                      point_size = 1.5, pch = 21, col = "black", position = position_dodge(width = 0.4, preserve = "single")) +
-  scale_color_manual(values = c("#0067A4", "#BF0033")) +
-  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
+  scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.5)) +
+  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.3)) +
   scale_x_continuous(breaks = c(-20, -18, -16, -14, -12, -10)) +
   theme(panel.background = element_rect(fill = "transparent"),
         axis.ticks.y = element_blank(),
@@ -948,18 +1091,31 @@ d13C_crypto.pred.plot <- ggplot(data = d13C_crypto.pred %>%
 d13C_crypto.pred.plot
 ```
 
-# Fig 2 - Combine d15N and d13C across all three species
+# Fig 2 - Combine d15N and d13C across all sources and three species
 
 ```{r d13C-d15N-crypto-plot}
 
-crypto.pred <- ggarrange(d15N_crypto.pred.plot, 
-                         d13C_crypto.pred.plot + rremove("y.text"),
-                         labels = c("a", "b"), widths = c(1,0.7), hjust = c(-12, 0.4),
-                         ncol = 2, common.legend = T, legend = "top")
+legend <- get_legend(d15N_source.pred.plot + theme(legend.position = "top"))
+
+plots_combined <- ggarrange(ggarrange(
+  d15N_source.pred.plot + rremove("xlab"), 
+  d15N_crypto.pred.plot + theme(legend.position = "none"), 
+  labels = c("a", "c"),  align = "v",
+  ncol = 1, nrow = 2, legend = "none", heights = c(0.6, 1), hjust = -11),
+  ggarrange(
+  d13C_source.pred.plot + rremove("xlab"), 
+  d13C_crypto.pred.plot + rremove("y.text"), 
+  labels = c("b", "d"),  align = "v",
+  ncol = 1, nrow = 2, legend = "none", heights = c(0.6, 1), hjust = 1),
+  align = "hv",
+  ncol = 2, nrow = 1, widths = c(1, 0.7))
+
+crypto.pred <- plot_grid(legend, plots_combined, ncol = 1, rel_heights = c(0.1, 1))
+
 crypto.pred
 
-ggsave("figures/Fig2.png", crypto.pred, width = 6, height = 4, units = "in", dpi = 600)
-ggsave("figures/Fig2.pdf", crypto.pred, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/Fig2.png", crypto.pred, width = 6, height = 6, units = "in", dpi = 600)
+#ggsave("figures/Fig2.pdf", crypto.pred, width = 6, height = 6, units = "in", dpi = 600)
 ```
 
 # II. 2. b. Effect of depth on cryptobenthic fish d13C
@@ -967,7 +1123,8 @@ ggsave("figures/Fig2.pdf", crypto.pred, width = 6, height = 4, units = "in", dpi
 ```{r d13C-crypto-depth}
 
 # model for Enneapterygius abeli
-d13Cmod_Enneabel <- brm(d13C ~ Location + Location:Depth + (1|Site), data = crypto_SIA_mod %>% filter(GENSPE == "Enneabel"))
+d13Cmod_Enneabel <- brm(d13C ~ Location + Location:Depth + (1|Site), iter = 8000, warmup = 4000, cores = 4, 
+                        data = crypto_SIA_mod %>% filter(GENSPE == "Enneabel"))
 d13Cmod_Eviogutt <- brm(d13C ~ Location + Location:Depth + (1|Site), data = crypto_SIA_mod %>% filter(GENSPE == "Eviogutt"))
 
 # model summary
@@ -979,9 +1136,19 @@ summary(d13Cmod_Eviogutt)
 pp_check(d13Cmod_Enneabel, ndraws = 100)
 #plot(d13Cmod_Eviogutt)
 pp_check(d13Cmod_Eviogutt, ndraws = 100)
+
+summary(rhat(d13Cmod_Eviogutt)) #gelman
+geweke_res <- as.mcmc(d13Cmod_Eviogutt) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
+
+summary(rhat(d13Cmod_Enneabel)) #gelman
+geweke_res <- as.mcmc(d13Cmod_Enneabel) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
 ```
 
-# Fig 3. a - Enneapterygius abeli d13C according to depth
+# Fig S5. a - Enneapterygius abeli d13C according to depth
 
 ```{r d13C-Enneabel-depth}
 
@@ -1009,7 +1176,7 @@ d13C.Enneabel.depth.pred.plot <- ggplot(d13C.Enneabel.depth.pred, aes(x = Depth,
          fill = guide_legend(title = "Seabird-nutrient load")) 
 ```
 
-# Fig 3. b - Eviota guttata d13C according to depth
+# Fig S5. b - Eviota guttata d13C according to depth
 
 ```{r d13C-Eviogutt-depth}
 
@@ -1038,7 +1205,7 @@ d13C.Eviogutt.depth.pred.plot <- ggplot(d13C.Eviogutt.depth.pred, aes(x = Depth,
          fill = guide_legend(title = "Seabird-nutrient load")) 
 ```
 
-# Fig 3 - Combine the two graphs
+# Fig S5 - Combine the two graphs
 
 ```{r d13C-d15N-crypto-depth-plot}
 
@@ -1047,8 +1214,8 @@ d13C.crypto.depth.pred <- ggarrange(d13C.Enneabel.depth.pred.plot,
                                labels = c("a", "b"),
                                ncol = 2, common.legend = T, hjust = c(-1.3, 0.7), legend = "top")
 
-ggsave("figures/FigS6.png", d13C.crypto.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
-ggsave("figures/FigS6.pdf", d13C.crypto.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/FigS5.png", d13C.crypto.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/FigS5.pdf", d13C.crypto.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
 
 d13C.crypto.depth.pred
 ```
@@ -1182,7 +1349,7 @@ output_options <- list(summary_save = TRUE,
 output_JAGS(jags.Enneabel.cont, Enneabel_mix, sources_Enneabel_mix, output_options)
 ```
 
-# Fig 4
+# Fig S6
 
 ```{r MM-Enneabel-plot}
 g.post.Enneabel <- output_posteriors(jags.Enneabel.cont, Enneabel_mix, sources_Enneabel_mix, output_options)
@@ -1249,8 +1416,8 @@ plot.Enneabel.mix <- ggarrange(plot.Enneabel.mix.c + rremove("legend.title"), pl
                                labels = c("a", "b", "c", "d"), vjust = c(0.7, 0.7, -0.4, -0.4),
                                ncol = 2, nrow = 2, common.legend = T, legend = "top") 
 
-ggsave("figures/Fig3.png", plot.Enneabel.mix, width = 6, height = 5, units = "in", dpi = 600)
-ggsave("figures/Fig3.pdf", plot.Enneabel.mix, width = 6, height = 5, units = "in", dpi = 600)
+#ggsave("figures/FigS6.png", plot.Enneabel.mix, width = 6, height = 5, units = "in", dpi = 600)
+#ggsave("figures/FigS6.pdf", plot.Enneabel.mix, width = 6, height = 5, units = "in", dpi = 600)
 
 plot.Enneabel.mix
 
@@ -1289,7 +1456,7 @@ jags.Eviogutt.cont <- run_model(run = "normal",
 output_JAGS(jags.Eviogutt.cont, Eviogutt_mix, sources_Eviogutt_mix, output_options)
 ```
 
-# Fig S8
+# Fig S7
 
 ```{r MM-Eviogutt-plot}
 g.post <- output_posteriors(jags.Eviogutt.cont, Eviogutt_mix, sources_Eviogutt_mix, output_options)
@@ -1354,8 +1521,8 @@ plot.Eviogutt.mix <- ggarrange(plot.Eviogutt.mix.c + rremove("legend.title"), pl
                                labels = c("a", "b", "c", "d"), vjust = c(0.7, 0.7, -0.4, -0.4),
                                ncol = 2, nrow = 2, common.legend = T, legend = "top") 
 
-ggsave("figures/FigS7.png", plot.Eviogutt.mix, width = 6, height = 5, units = "in", dpi = 600)
-ggsave("figures/FigS7.pdf", plot.Eviogutt.mix, width = 6, height = 5, units = "in", dpi = 600)
+#ggsave("figures/FigS7.png", plot.Eviogutt.mix, width = 6, height = 5, units = "in", dpi = 600)
+#ggsave("figures/FigS7.pdf", plot.Eviogutt.mix, width = 6, height = 5, units = "in", dpi = 600)
 
 plot.Eviogutt.mix
 ```
@@ -1379,7 +1546,7 @@ iso.Cirrfila
 
 ```
 
-# Fig S7 - Combine all isospace plots
+# Fig S8 - Combine all isospace plots
 
 ```{r MM-iso-plot}
 
@@ -1393,8 +1560,8 @@ iso.plot <- ggarrange(iso.Enneabel +
                       labels = c("a", "b", "c"), vjust = 0.2,
                       common.legend = T, legend = "top")
 
-ggsave("figures/FigS8.png", iso.plot, width = 9, height = 5, units = "in", dpi = 600)
-ggsave("figures/FigS8.pdf", iso.plot, width = 9, height = 5, units = "in", dpi = 600)
+#ggsave("figures/FigS8.png", iso.plot, width = 9, height = 5, units = "in", dpi = 600)
+#ggsave("figures/FigS8.pdf", iso.plot, width = 9, height = 5, units = "in", dpi = 600)
 ```
 
 # IV. Community effects
@@ -1490,11 +1657,31 @@ data_site <- data_red %>%
 
 ```{r comm-table}
 
-Spr.mod <- brm(log(Spr_m) ~ Location + Complexity + Location:Depth, data = data_site)
-Dens.mod <- brm(log(Ab_m) ~ Location + Complexity + Location:Depth, data = data_site)
-Biomass_m.mod <- brm(log(Biomass_m) ~ Location + Complexity + Location:Depth, data = data_site)
+Spr.mod <- brm(Spr_m ~ Location + Complexity + Location:Depth, family = lognormal, data = data_site)
+Dens.mod <- brm(Ab_m ~ Location + Complexity + Location:Depth, family = lognormal, iter = 8000, warmup = 4000, cores = 4, data = data_site)
+Biomass_m.mod <- brm(Biomass_m ~ Location + Complexity + Location:Depth, family = lognormal, data = data_site)
 
-# predict values for both levels of Location - Table XX
+# assess fit
+pp_check(Spr.mod)
+pp_check(Dens.mod)
+pp_check(Biomass_m.mod)
+
+summary(rhat(Spr.mod)) #gelman
+geweke_res <- as.mcmc(Spr.mod) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
+
+summary(rhat(Dens.mod)) #gelman
+geweke_res <- as.mcmc(Dens.mod) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
+
+summary(rhat(Biomass_m.mod)) #gelman
+geweke_res <- as.mcmc(Biomass_m.mod) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
+
+# predict values for both levels of Location
 em_Spr <- emmeans(Spr.mod,  ~ Location, regrid = "response", epred = T) %>% 
   gather_emmeans_draws() %>% 
   mean_hdi() 
@@ -1510,18 +1697,15 @@ em_Biomass_m <- emmeans(Biomass_m.mod,  ~ Location, regrid = "response", epred =
 # predict values using fitted values
 Spr.pred <- data_site %>%
   data_grid(Location, Complexity, Depth) %>%  
-  add_epred_draws(Spr.mod, ~ Location, allow_new_levels = T) %>%
-  mutate(.epred = exp(.epred)) 
+  add_epred_draws(Spr.mod, ~ Location, allow_new_levels = T)
 
 Dens.pred <- data_site %>%
   data_grid(Location, Complexity, Depth) %>%  
-  add_epred_draws(Dens.mod, allow_new_levels = T) %>%
-  mutate(.epred = exp(.epred))
+  add_epred_draws(Dens.mod, allow_new_levels = T)
 
 Biomass_m.pred <- data_site %>%
   data_grid(Location, Complexity, Depth) %>%  
-  add_epred_draws(Biomass_m.mod, allow_new_levels = T) %>%
-  mutate(.epred = exp(.epred)) 
+  add_epred_draws(Biomass_m.mod, allow_new_levels = T)
 
 # Table I predicted values
 Spr.pred.table <- Spr.pred %>% 
@@ -1545,15 +1729,16 @@ Biomass_m.pred.table
 
 ```{r comm-plot}
 
-Spr.pred.plot <- ggplot(data = Spr.pred) +
+Spr.pred.plot <- ggplot(data = Spr.pred %>% filter(.epred < 10)) +
   stat_slab(aes(x = .epred, fill = Location, col = Location,
-                   group = Location),  height = 0.8, slab_linewidth = 0.7, orientation = "horizontal") +
-  geom_jitter(data = data_site, aes(y = 0, x = Spr_m, fill = Location),
-              size = 1, pch = 21, col = "black", height = 0.1, alpha = 0.3) +
+                   group = Location),
+            height = 0.8, slab_linewidth = 0.7, orientation = "horizontal") +
+  geom_jitter(data = data_site, aes(y = 0.2, x = Spr_m, fill = Location),
+              size = 1.2, pch = 21, col = "black", height = 0.1, alpha = 0.7) +
   stat_pointinterval(aes(x = .epred, fill = Location, col = Location), 
                      point_size = 1.5, pch = 21, col = "black", position = position_dodge(width = 0.4, preserve = "single")) +
-  scale_color_manual(values = c("#0067A4", "#BF0033")) +
-  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
+  scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.5)) +
+  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.3)) +
   theme(axis.title.y = element_blank(),
         legend.position = c(0.87, 0.9),
         panel.background = element_rect(fill = "transparent"),
@@ -1561,17 +1746,17 @@ Spr.pred.plot <- ggplot(data = Spr.pred) +
   labs(x = bquote("Species density (species richness /" ~m^2~")")) +
   guides(fill = guide_legend(nrow = 1, title = "Seabird-nutrient load"),
          col = guide_legend(nrow = 1, title = "Seabird-nutrient load")) +
-   coord_cartesian(xlim=c(0, 14)) 
+   coord_cartesian(xlim=c(0, 13))
 
-Dens.pred.plot <- ggplot(data = Dens.pred) +
+Dens.pred.plot <- ggplot(data = Dens.pred %>% filter(.epred < 30)) +
   stat_slab(aes(x = .epred, fill = Location, col = Location,
                    group = Location), height = 0.8, slab_linewidth = 0.7, orientation = "horizontal") +
-  geom_jitter(data = data_site, aes(y = 0, x = Ab_m, fill = Location),
-              size = 1, pch = 21, col = "black", height = 0.1, alpha = 0.3) +
+  geom_jitter(data = data_site, aes(y = 0.2, x = Ab_m, fill = Location),
+              size = 1.2, pch = 21, col = "black", height = 0.1, alpha = 0.7) +
   stat_pointinterval(aes(x = .epred, fill = Location, col = Location), 
                      point_size = 1.5, pch = 21, col = "black", position = position_dodge(width = 0.4, preserve = "single")) +
-  scale_color_manual(values = c("#0067A4", "#BF0033")) +
-  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
+  scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.5)) +
+  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.3)) +
   theme(axis.title.y = element_blank(),
         legend.position = c(0.87, 0.9),
         panel.background = element_rect(fill = "transparent"),
@@ -1581,15 +1766,15 @@ Dens.pred.plot <- ggplot(data = Dens.pred) +
          col = guide_legend(nrow = 1, title = "Seabird-nutrient load"))  +
    coord_cartesian(xlim=c(0, 31)) 
 
-Biomass_m.pred.plot <- ggplot(data = Biomass_m.pred) +
+Biomass_m.pred.plot <- ggplot(data = Biomass_m.pred %>% filter(.epred < 9)) +
   stat_slab(aes(x = .epred, fill = Location, col = Location,
                    group = Location),  height = 0.8, slab_linewidth = 0.7, orientation = "horizontal") +
-  geom_jitter(data = data_site, aes(y = 0, x = Biomass_m, fill = Location),
-              size = 1, pch = 21, col = "black", height = 0.1, alpha = 0.3) +
+  geom_jitter(data = data_site, aes(y = 0.2, x = Biomass_m, fill = Location),
+              size = 1.2, pch = 21, col = "black", height = 0.1, alpha = 0.7) +
   stat_pointinterval(aes(x = .epred, fill = Location, col = Location), 
                      point_size = 1.5, pch = 21, col = "black", position = position_dodge(width = 0.5, preserve = "single")) +
-  scale_color_manual(values = c("#0067A4", "#BF0033")) +
-  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
+  scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.5)) +
+  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.3)) +
   theme(axis.title.y = element_blank(),
         legend.position = c(0.87, 0.9),
         panel.background = element_rect(fill = "transparent"),
@@ -1608,8 +1793,8 @@ com_estimates.plot <- ggarrange(Spr.pred.plot + rremove("y.text"),
 
 com_estimates.plot
 
-ggsave("figures/FigS9.png", com_estimates.plot, width = 6, height = 5, units = "in", dpi = 600)
-ggsave("figures/FigS9.pdf", com_estimates.plot, width = 6, height = 5, units = "in", dpi = 600)
+#ggsave("figures/FigS9.png", com_estimates.plot, width = 6, height = 5, units = "in", dpi = 600)
+#ggsave("figures/FigS9.pdf", com_estimates.plot, width = 6, height = 5, units = "in", dpi = 600)
 ```
 
 # IV. 2. Community composition - RDA
@@ -1682,8 +1867,13 @@ rda_plot <- ggord(com_RDA, Location, hull = T, ext = c(1.2,1.1), repel = T, vecl
 
 rda_plot
 
-ggsave("figures/FigS10.png", rda_plot, width = 6, height = 6, units = "in", dpi = 600)
-ggsave("figures/FigS10.pdf", rda_plot, width = 6, height = 6, units = "in", dpi = 600)
+# Eviobipu
+4.77/sum(species_scores[,1])
+#Enneabel
+4.24/sum(species_scores[,1])
+
+#ggsave("figures/FigS10.png", rda_plot, width = 6, height = 6, units = "in", dpi = 600)
+#ggsave("figures/FigS10.pdf", rda_plot, width = 6, height = 6, units = "in", dpi = 600)
 ```
 
 # V. Species-specific effects
@@ -1708,7 +1898,7 @@ ggplot(data_red,
 TL_mod_com.data <- data_red %>% 
   mutate(taxloc = factor(interaction(GENSPE, Location)))
   
-TL_mod_com <- brm(log(TL) ~ Location + (1|GENSPE) + (1|Site), data = TL_mod_com.data)
+TL_mod_com <- brm(TL ~ Location + (1|GENSPE) + (1|Site), family = lognormal, iter = 8000, warmup = 4000, cores = 4, data = TL_mod_com.data)
 
 # model summary
 summary(TL_mod_com)
@@ -1717,25 +1907,23 @@ summary(TL_mod_com)
 #plot(TL_mod)
 pp_check(TL_mod_com, ndraws = 100)
 
-hypothesis(TL_mod_com, hypothesis = "LocationLow < 0")
-#hypothesis(TL_mod_1, hypothesis = "LocationHigh > LocationLow") - model with 0 +
-
-posterior_draws <- posterior_samples(TL_mod_com) %>% 
-  mutate(neg = ifelse(b_LocationLow < 0, 1, 0))
-
-sum(posterior_draws$neg)/40
+summary(rhat(TL_mod_com)) #gelman
+geweke_res <- as.mcmc(TL_mod_com) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
 
 # predict values using fitted values
 TL_com.pred <- TL_mod_com.data %>%
   data_grid(Location, Depth, GENSPE, Site) %>%  
-  add_epred_draws(TL_mod_com, ndraws = 1000, allow_new_levels = T) %>%
-  mutate(.epred = exp(.epred))
+  add_epred_draws(TL_mod_com, ndraws = 1000, allow_new_levels = T) 
 
 # contrasts
 em_TL_com <- emmeans(TL_mod_com,  ~ Location)
 contrasts_TL_com <- contrast(em_TL_com, method = "tukey") 
 
 contrasts_TL_com
+hypothesis(TL_mod_com, hypothesis = "LocationLow < 0")
+hypothesis(W_mod_com, hypothesis = "LocationLow < 0")
 ```
 
 # V. 1. b. Species level total length
@@ -1750,7 +1938,7 @@ TL_mod.data <- data_red %>%
                               TRUE ~ 3),
          taxloc = factor(interaction(GENSPE, Location)))
 
-TL_mod <- brm(log(TL) ~ taxloc + (1|Site), data = TL_mod.data)
+TL_mod <- brm(TL ~ 0 + taxloc + (1|Site), family = lognormal, data = TL_mod.data)
 
 # model summary
 summary(TL_mod)
@@ -1759,6 +1947,11 @@ summary(TL_mod)
 #plot(TL_mod)
 pp_check(TL_mod, ndraws = 100)
 
+summary(rhat(TL_mod)) #gelman
+geweke_res <- as.mcmc(TL_mod) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
+
 # predict values using fitted values
 TL.pred <- TL_mod.data %>%
   data_grid(taxloc, Site) %>%  
@@ -1766,8 +1959,7 @@ TL.pred <- TL_mod.data %>%
   separate(taxloc, c("GENSPE", "Location"), remove = F) %>%
   mutate(ordervar = case_when(GENSPE == "Eviobipu" ~ 1,
                               GENSPE == "Eviogutt" ~ 2,
-                              TRUE ~ 3)) %>% 
-  mutate(.epred = exp(.epred))
+                              TRUE ~ 3))
 
 # contrasts
 em_TL <- emmeans(TL_mod,  ~ taxloc)
@@ -1778,9 +1970,12 @@ contrasts_TL <- contrast(em_TL, method = "tukey") %>%
   mutate(contrast = str_sub(contrast1, 1, 8))
 
 contrasts_TL
+hypothesis(TL_mod, "taxlocEviogutt.Low < taxlocEviogutt.High")
+hypothesis(TL_mod, "taxlocEnneabel.Low < taxlocEnneabel.High")
+hypothesis(TL_mod, "taxlocEviobipu.Low < taxlocEviobipu.High")
 ```
 
-# Fig 5.a - Total length
+# Fig 3.a - Total length
 
 ```{r TL-plot}
 
@@ -1792,16 +1987,17 @@ TL.pred.plot <- ggplot(data = TL.pred %>%
   stat_slab(aes(y = reorder(GENSPE, ordervar, decreasing = T), x = .epred, fill = Location, col = Location, 
                    group = Location), height = 0.8, slab_linewidth = 0.7, orientation = "horizontal") +
   geom_jitter(data = TL_mod.data %>% 
-                                   mutate(GENSPE = case_when(GENSPE == "Enneabel" ~ "Enneapterygius abeli",
-                                          GENSPE == "Eviogutt" ~ "Eviota guttata",
-                                          GENSPE == "Eviobipu" ~ "Eviota bipunctata",
-                                          TRUE ~ NA_character_)), 
-              aes(x = TL, y = GENSPE, fill = Location),
-              size = 1.5, pch = 21, col = "black", height = 0.1, alpha = 0.3) +
+                                   mutate(GENSPE = case_when(GENSPE == "Enneabel" ~ "1",
+                                          GENSPE == "Eviogutt" ~ "2",
+                                          GENSPE == "Eviobipu" ~ "3",
+                                          TRUE ~ NA),
+                                          GENSPE = as.numeric(GENSPE)), 
+              aes(x = TL, y = GENSPE + 0.2, fill = Location),
+              size = 1.2, pch = 21, col = "black", height = 0.2, alpha = 0.7) +
   stat_pointinterval(aes(y = reorder(GENSPE, ordervar, decreasing = T), x = .epred, fill = Location, col = Location), 
                      point_size = 1.5, pch = 21, col = "black", position = position_dodge(width = 0.4, preserve = "single")) +
-  scale_color_manual(values = c("#0067A4", "#BF0033")) +
-  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
+  scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.5)) +
+  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.3)) +
   annotation_custom(img_Eviobipu, xmin = -4.5, xmax = 3.5, ymin = 3, ymax = 3.5) +
   annotation_custom(img_Eviogutt, xmin = -4.5, xmax = 3.5, ymin = 2, ymax = 2.5) +
   annotation_custom(img_Enneabel, xmin = -4.5, xmax = 3.5, ymin = 1, ymax = 1.5) +
@@ -1815,6 +2011,8 @@ TL.pred.plot <- ggplot(data = TL.pred %>%
   guides(fill = guide_legend(nrow = 1, title = "Seabird-nutrient load"),
          col = guide_legend(nrow = 1, title = "Seabird-nutrient load")) +
   coord_cartesian(xlim=c(5, 28), clip = "off")
+
+TL.pred.plot
 ```
 
 # V. 2. Weight
@@ -1824,7 +2022,7 @@ TL.pred.plot <- ggplot(data = TL.pred %>%
 ```{r W-com}
 
 # model
-W_mod_com <- brm(log(W) ~ Location + (1|GENSPE) + (1|Site), data = data_red)
+W_mod_com <- brm(W ~ Location + (1|GENSPE) + (1|Site), family = lognormal, iter = 10000, warmup = 5000, cores = 4, data = data_red)
 
 # model summary
 summary(W_mod_com)
@@ -1832,28 +2030,23 @@ summary(W_mod_com)
 # assess model fit
 #plot(W_mod)
 pp_check(W_mod_com, ndraws = 100)
+plot(W_mod_com)
 
-hypothesis(W_mod_com, hypothesis = "LocationLow < 0")
-
-posterior_draws <- posterior_samples(W_mod_com) %>% 
-  mutate(neg = ifelse(b_LocationLow < 0, 1, 0))
-
-sum(posterior_draws$neg)/40
+summary(rhat(W_mod_com)) #gelman
+geweke_res <- as.mcmc(W_mod_com) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
 
 # predict values using fitted values
 W.pred_com <- data_red %>%
   data_grid(Location, Site, GENSPE) %>%  
-  add_epred_draws(W_mod_com, ndraws = 1000, allow_new_levels = T) %>%
-  mutate(.epred = exp(.epred))
-
+  add_epred_draws(W_mod_com, ndraws = 1000, allow_new_levels = T)
 # contrasts
 em_W_com <- emmeans(W_mod_com,  ~ Location)
 contrasts_W_com <- contrast(em_W_com, method = "tukey") 
 
 contrasts_W_com
-parameters(W_mod_com)
-hypothesis(W_mod_com, "LocationLow < 0")
-hypothesis(TL_mod_com, "LocationLow < 0")
+hypothesis(W_mod_com, hypothesis = "LocationLow < 0")
 ```
 
 # V. 2. b. Species level weight
@@ -1868,7 +2061,7 @@ W_mod.data <- data_red %>%
                               TRUE ~ 3),
          taxloc = factor(interaction(GENSPE, Location)))
 
-W_mod <- brm(log(W) ~ taxloc + (1|Site), data = W_mod.data)
+W_mod <- brm(W ~ 0 + taxloc + (1|Site), iter = 8000, warmup = 4000, family = lognormal, data = W_mod.data)
 
 # model summary
 summary(W_mod)
@@ -1877,6 +2070,11 @@ summary(W_mod)
 #plot(W_mod)
 pp_check(W_mod, ndraws = 100)
 
+summary(rhat(W_mod)) #gelman
+geweke_res <- as.mcmc(W_mod) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
+
 # predict values using fitted values
 W.pred <- W_mod.data %>%
   data_grid(taxloc, Site) %>%  
@@ -1884,8 +2082,7 @@ W.pred <- W_mod.data %>%
   separate(taxloc, c("GENSPE", "Location"), remove = F) %>%
   mutate(ordervar = case_when(GENSPE == "Eviobipu" ~ 1,
                               GENSPE == "Eviogutt" ~ 2,
-                              TRUE ~ 3)) %>% 
-  mutate(.epred = exp(.epred))
+                              TRUE ~ 3))
 
 # contrasts
 em_W <- emmeans(W_mod,  ~ taxloc)
@@ -1896,9 +2093,12 @@ contrasts_W <- contrast(em_W, method = "tukey") %>%
   mutate(contrast = str_sub(contrast1, 1, 8))
 
 contrasts_W
+hypothesis(W_mod, "taxlocEviogutt.Low < taxlocEviogutt.High")
+hypothesis(W_mod, "taxlocEnneabel.Low < taxlocEnneabel.High")
+hypothesis(W_mod, "taxlocEviobipu.Low < taxlocEviobipu.High")
 ```
 
-# Fig 5.b - Weight
+# Fig 3.b - Weight
 
 ```{r W-plot}
 
@@ -1908,18 +2108,19 @@ W.pred.plot <- ggplot(data = W.pred %>%
                                           GENSPE == "Eviobipu" ~ "Eviota bipunctata",
                                           TRUE ~ NA_character_))) +
   stat_slab(aes(y = reorder(GENSPE, ordervar, decreasing = T), x = .epred, fill = Location, col = Location,
-                   group = Location), height = 0.8, slab_linewidth = 0.7, orientation = "horizontal") +
+                   group = Location), height = 1, slab_linewidth = 0.7, orientation = "horizontal") +
   geom_jitter(data = W_mod.data %>% 
-                               mutate(GENSPE = case_when(GENSPE == "Enneabel" ~ "Enneapterygius abeli",
-                                      GENSPE == "Eviogutt" ~ "Eviota guttata",
-                                      GENSPE == "Eviobipu" ~ "Eviota bipunctata",
-                                      TRUE ~ NA_character_)), 
-              aes(x = W, y = GENSPE, fill = Location),
-              size = 1.5, pch = 21, col = "black", height = 0.1, alpha = 0.3) +
+                               mutate(GENSPE = case_when(GENSPE == "Enneabel" ~ "1",
+                                      GENSPE == "Eviogutt" ~ "2",
+                                      GENSPE == "Eviobipu" ~ "3",
+                                      TRUE ~ NA),
+                                      GENSPE = as.numeric(GENSPE)), 
+              aes(x = W, y = GENSPE + 0.2, fill = Location),
+              size = 1.2, pch = 21, col = "black", height = 0.2, alpha = 0.7) +
   stat_pointinterval(aes(y = reorder(GENSPE, ordervar, decreasing = T), x = .epred, fill = Location, col = Location), 
                      point_size = 1.5, pch = 21, col = "black", position = position_dodge(width = 0.4, preserve = "single")) +
-  scale_color_manual(values = c("#0067A4", "#BF0033")) +
-  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
+  scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.5)) +
+  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.3)) +
   theme(panel.background = element_rect(fill = "transparent"),
         axis.line = element_line(colour = "black"),
         axis.ticks.y = element_blank(),
@@ -1928,10 +2129,12 @@ W.pred.plot <- ggplot(data = W.pred %>%
   labs(x = bquote("Weight (g)")) +
   guides(fill = guide_legend(nrow = 1, title = "Seabird-nutrient load"),
          col = guide_legend(nrow = 1, title = "Seabird-nutrient load")) +
-  coord_cartesian(xlim=c(0, 0.17))
+  coord_cartesian(xlim=c(0, 0.3))
+
+W.pred.plot
 ```
 
-# Fig 5 - Combine length and weight
+# Fig 3 - Combine length and weight
 
 ```{r TL-W-plot}
 
@@ -1939,8 +2142,8 @@ TL_W.plot <- ggarrange(TL.pred.plot, W.pred.plot + rremove("y.text"),
           nrow = 1, ncol = 2, widths = c(1,0.7), hjust = c(-10, 0.3),
           common.legend = T, legend = "top", labels = c("a", "b"))
 
-ggsave("figures/Fig4.png", TL_W.plot, width = 6, height = 4, units = "in", dpi = 600)
-ggsave("figures/Fig4.pdf", TL_W.plot, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/Fig3.png", TL_W.plot, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/Fig3.pdf", TL_W.plot, width = 6, height = 4, units = "in", dpi = 600)
 
 TL_W.plot
 ```
@@ -2051,8 +2254,27 @@ uvc_data_biomass_GENSPE <- uvc_data %>%
 
 ```{r uvc-biomass-uvc-all}
 
+priors <- c(
+  prior(normal(0, 1), class = "b"),                # Predictors with small/moderate effects
+  prior(normal(log(100), 1), class = "Intercept"), # Narrow intercept prior
+  prior(normal(1, 0.5), class = "sigma", lb = 0, ub = 1)   # Narrow residual SD
+)
+
+#prior(normal(4.4, 0.3), class = "Intercept"), # Centered on log-median of data
+#            # Tight prior for coefficients
+
+
+# get_prior(uvc_biomass_all.mod)
+uvc_biomass_all.prior <- brm(Biomass_m ~ Location, family = lognormal, prior = priors, data = uvc_data_biomass, sample_prior = "only")
+# 
+pred_prior <- posterior_predict(uvc_biomass_all.prior, ndraws = 100)
+summary(pred_prior)
+#summary(uvc_biomass_all.prior)
+pp_check(uvc_biomass_all.prior, ndraws = 10)
+  
+
 # model
-uvc_biomass_all.mod <- brm(log(Biomass_m) ~ Location, data = uvc_data_biomass)
+uvc_biomass_all.mod <- brm(Biomass_m ~ Location, family = lognormal, prior = priors, data = uvc_data_biomass)
 
 # model summary
 summary(uvc_biomass_all.mod)
@@ -2061,11 +2283,15 @@ summary(uvc_biomass_all.mod)
 #plot(uvc_biomass.mod)
 pp_check(uvc_biomass_all.mod, ndraws = 100)
 
+summary(rhat(uvc_biomass_all.mod)) #gelman
+geweke_res <- as.mcmc(uvc_biomass_all.mod) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
+
 # predict values using fitted values
 uvc_biomass_all.pred <- uvc_data_biomass %>%
   data_grid(Location) %>%  
-  add_epred_draws(uvc_biomass_all.mod, allow_new_levels = T) %>%
-  mutate(.epred = exp(.epred))
+  add_epred_draws(uvc_biomass_all.mod, allow_new_levels = T)
 
 # contrasts
 em_uvc_biomass_all <- emmeans(uvc_biomass_all.mod,  ~ Location)
@@ -2084,12 +2310,12 @@ uvc_biomass.pred.plot.all <- ggplot(data = uvc_biomass_all.pred) +
   stat_slab(aes(x = .epred, fill = Location, col = Location,
                    group = Location), orientation = "horizontal") +
   geom_jitter(data = uvc_data_biomass, 
-              aes(x = Biomass_m, y = 0, fill = Location),
-              size = 1.5, pch = 21, col = "black", height = 0.1, alpha = 0.3) +
+              aes(x = Biomass_m, y = 0.2, fill = Location),
+              size = 1.5, pch = 21, col = "black", height = 0.2, alpha = 0.7) +
   stat_pointinterval(aes(x = .epred, fill = Location, col = Location), 
                      point_size = 1.5, pch = 21, col = "black", position = position_dodge(width = 0.4, preserve = "single")) +
-  scale_color_manual(values = c("#0067A4", "#BF0033")) +
-  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
+  scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.5)) +
+  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.3)) +
   labs(x = bquote("Biomass (g /" ~m^2~")")) +
   ggtitle("All") +
   guides(fill = guide_legend(title = "Seabird-nutrient load"),
@@ -2097,7 +2323,7 @@ uvc_biomass.pred.plot.all <- ggplot(data = uvc_biomass_all.pred) +
   theme(panel.background = element_rect(fill = "transparent"),
         axis.line = element_line(colour = "black"),
         axis.title.y = element_blank(),
-        plot.title = element_text(hjust = 1, vjust = 0.7, margin = margin(t = 10, b = -10))) +
+        plot.title = element_text(size = 11, hjust = 1, vjust = 0.7, margin = margin(t = 10, b = -10))) +
   coord_cartesian(xlim=c(0, 600))
 
 uvc_biomass.pred.plot.all
@@ -2118,7 +2344,7 @@ uvc_biomass.mod_data <- uvc_data_biomass_FG %>%
                               TRUE ~ 7),
          taxloc = factor(interaction(FG, Location)))
 
-uvc_biomass.mod <- brm(log(Biomass_m) ~ taxloc, data = uvc_biomass.mod_data)
+uvc_biomass.mod <- brm(Biomass_m ~ taxloc, family = lognormal, prior = priors, data = uvc_biomass.mod_data)
 
 # model summary
 summary(uvc_biomass.mod)
@@ -2126,6 +2352,12 @@ summary(uvc_biomass.mod)
 # assess model fit
 #plot(uvc_biomass.mod)
 pp_check(uvc_biomass.mod, ndraws = 100)
+
+summary(rhat(uvc_biomass.mod)) #gelman
+geweke_res <- as.mcmc(uvc_biomass.mod) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
+
 
 # predict values using fitted values
 uvc_biomass.pred <- uvc_biomass.mod_data %>%
@@ -2138,8 +2370,7 @@ uvc_biomass.pred <- uvc_biomass.mod_data %>%
                               FG == "Carnivore" ~ 4,
                               FG == "Piscivore" ~ 5,
                               FG == "Corallivore" ~ 6,
-                              TRUE ~ 7)) %>% 
-  mutate(.epred = exp(.epred))
+                              TRUE ~ 7))
 
 # contrasts
 em_uvc_biomass <- emmeans(uvc_biomass.mod,  ~ taxloc)
@@ -2161,41 +2392,41 @@ hypothesis(uvc_biomass.mod, hypothesis = "taxlocCorallivore.Low < taxlocCoralliv
 hypothesis(uvc_biomass.mod, hypothesis = "0 < taxlocCarnivore.High")
 ```
 
-# Fig S11 - Biomass across all functional groups
+# Fig 5 - Biomass across all functional groups
 
 ```{r uvc-biomass-FG-plot}
 
 uvc_biomass.pred.plot.Herb <- ggplot(data = uvc_biomass.pred %>% filter(FG == "Herbivore")) +
+  annotation_custom(img_Herb, xmin = 520, xmax = 620, ymin = 0.3, ymax = 0.8) +
   stat_slab(aes(x = .epred, fill = Location, col = Location,
                    group = Location), orientation = "horizontal") +
   geom_jitter(data = uvc_biomass.mod_data %>% filter(FG == "Herbivore"), 
-              aes(x = Biomass_m, y = 0, fill = Location),
-              size = 1.5, pch = 21, col = "black", height = 0.1, alpha = 0.3) +
+              aes(x = Biomass_m, y = 0.2, fill = Location),
+              size = 1.5, pch = 21, col = "black", height = 0.2, alpha = 0.7) +
   stat_pointinterval(aes(x = .epred, fill = Location, col = Location), 
                      point_size = 1.5, pch = 21, col = "black", position = position_dodge(width = 0.4, preserve = "single")) +
-  scale_color_manual(values = c("#0067A4", "#BF0033")) +
-  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
-  annotation_custom(img_Herb, xmin = 190, xmax = 230, ymin = 0.2, ymax = 0.7) +
-  annotate("text", x = 205, y = 1, label = "Herbivore") +
+  scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.5)) +
+  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.3)) +
+  annotate("text", x = 550, y = 1, label = "Herbivore") +
   labs(x = bquote("Biomass (g /" ~m^2~")")) +
   guides(fill = guide_legend(title = "Seabird-nutrient load"),
          col = guide_legend(title = "Seabird-nutrient load")) +
   theme(panel.background = element_rect(fill = "transparent"),
         axis.line = element_line(colour = "black"),
         axis.title.y = element_blank()) +
-  coord_cartesian(xlim = c(0, 220), clip = "off")
+  coord_cartesian(xlim = c(0, 600), clip = "off")
 
 uvc_biomass.pred.plot.Omni <- ggplot(data = uvc_biomass.pred %>% filter(FG == "Omnivore")) +
+  annotation_custom(img_Omni, xmin = 17, xmax = 21, ymin = 0.3, ymax = 0.8) +
   stat_slab(aes(x = .epred, fill = Location, col = Location,
                    group = Location), orientation = "horizontal") +
   geom_jitter(data = uvc_biomass.mod_data %>% filter(FG == "Omnivore"), 
-              aes(x = Biomass_m, y = 0, fill = Location),
-              size = 1.5, pch = 21, col = "black", height = 0.1, alpha = 0.3) +
+              aes(x = Biomass_m, y = 0.2, fill = Location),
+              size = 1.5, pch = 21, col = "black", height = 0.2, alpha = 0.7) +
   stat_pointinterval(aes(x = .epred, fill = Location, col = Location), 
                      point_size = 1.5, pch = 21, col = "black", position = position_dodge(width = 0.4, preserve = "single")) +
-  scale_color_manual(values = c("#0067A4", "#BF0033")) +
-  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
-  annotation_custom(img_Omni, xmin = 16.5, xmax = 21, ymin = 0.2, ymax = 0.7) +
+  scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.5)) +
+  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.3)) +
   annotate("text", x = 18.5, y = 1, label = "Omnivore") +
   labs(x = bquote("Biomass (g /" ~m^2~")")) +
   guides(fill = guide_legend(title = "Seabird-nutrient load"),
@@ -2206,373 +2437,265 @@ uvc_biomass.pred.plot.Omni <- ggplot(data = uvc_biomass.pred %>% filter(FG == "O
   coord_cartesian(xlim = c(0, 20), clip = "off")
 
 uvc_biomass.pred.plot.Inv <- ggplot(data = uvc_biomass.pred %>% filter(FG == "Invertivore")) +
+  annotation_custom(img_Inv, xmin = 30, xmax = 37, ymin = 0.3, ymax = 0.8) +
   stat_slab(aes(x = .epred, fill = Location, col = Location,
                    group = Location), orientation = "horizontal") +
   geom_jitter(data = uvc_biomass.mod_data %>% filter(FG == "Invertivore"), 
-              aes(x = Biomass_m, y = 0, fill = Location),
-              size = 1.5, pch = 21, col = "black", height = 0.1, alpha = 0.3) +
+              aes(x = Biomass_m, y = 0.2, fill = Location),
+              size = 1.5, pch = 21, col = "black", height = 0.2, alpha = 0.7) +
   stat_pointinterval(aes(x = .epred, fill = Location, col = Location), 
                      point_size = 1.5, pch = 21, col = "black", position = position_dodge(width = 0.4, preserve = "single")) +
-  scale_color_manual(values = c("#0067A4", "#BF0033")) +
-  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
-  annotate("text", x = 28, y = 1, label = "Invertivore") +
-  annotation_custom(img_Inv, xmin = 25, xmax = 33, ymin = 0.2, ymax = 0.7) +
+  scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.5)) +
+  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.3)) +
+  annotate("text", x = 32, y = 1, label = "Invertivore") +
   labs(x = bquote("Biomass (g /" ~m^2~")")) +
   guides(fill = guide_legend(title = "Seabird-nutrient load"),
          col = guide_legend(title = "Seabird-nutrient load")) +
   theme(panel.background = element_rect(fill = "transparent"),
         axis.line = element_line(colour = "black"),
         axis.title.y = element_blank()) +
-  coord_cartesian(xlim = c(0, 31), clip = "off")
+  coord_cartesian(xlim = c(0, 35), clip = "off")
 
 uvc_biomass.pred.plot.Carn <- ggplot(data = uvc_biomass.pred %>% filter(FG == "Carnivore")) +
+  annotation_custom(img_Carn, xmin = 195, xmax = 260, ymin = 0.3, ymax = 0.8) +
   stat_slab(aes(x = .epred, fill = Location, col = Location,
                    group = Location), orientation = "horizontal") +
   geom_jitter(data = uvc_biomass.mod_data %>% filter(FG == "Carnivore"), 
-              aes(x = Biomass_m, y = 0, fill = Location),
-              size = 1.5, pch = 21, col = "black", height = 0.1, alpha = 0.3) +
+              aes(x = Biomass_m, y = 0.2, fill = Location),
+              size = 1.5, pch = 21, col = "black", height = 0.3, alpha = 0.8) +
   stat_pointinterval(aes(x = .epred, fill = Location, col = Location), 
                      point_size = 1.5, pch = 21, col = "black", position = position_dodge(width = 0.4, preserve = "single")) +
-  scale_color_manual(values = c("#0067A4", "#BF0033")) +
-  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
-  annotation_custom(img_Carn, xmin = 38.5, xmax = 46, ymin = 0.2, ymax = 0.7) +
-  annotate("text", x = 41, y = 1, label = "Carnivore") +
+  scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.5)) +
+  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.3)) +
+  annotate("text", x = 220, y = 1, label = "Carnivore") +
   labs(x = bquote("Biomass (g /" ~m^2~")")) +
   guides(fill = guide_legend(title = "Seabird-nutrient load"),
          col = guide_legend(title = "Seabird-nutrient load")) +
   theme(panel.background = element_rect(fill = "transparent"),
         axis.line = element_line(colour = "black"),
         axis.title.y = element_blank()) +
-  coord_cartesian(xlim = c(0, 45), clip = "off")
+  coord_cartesian(xlim = c(0, 240), clip = "off")
 
 uvc_biomass.pred.plot.Pisc <- ggplot(data = uvc_biomass.pred %>% filter(FG == "Piscivore")) +
+  annotation_custom(img_Pisc, xmin = 70, xmax = 85, ymin = 0.3, ymax = 0.8) +
   stat_slab(aes(x = .epred, fill = Location, col = Location,
                    group = Location), orientation = "horizontal") +
   geom_jitter(data = uvc_biomass.mod_data %>% filter(FG == "Piscivore"), 
-              aes(x = Biomass_m, y = 0, fill = Location),
-              size = 1.5, pch = 21, col = "black", height = 0.1, alpha = 0.3) +
+              aes(x = Biomass_m, y = 0.2, fill = Location),
+              size = 1.5, pch = 21, col = "black", height = 0.2, alpha = 0.7) +
   stat_pointinterval(aes(x = .epred, fill = Location, col = Location), 
                      point_size = 1.5, pch = 21, col = "black", position = position_dodge(width = 0.4, preserve = "single")) +
-  scale_color_manual(values = c("#0067A4", "#BF0033")) +
-  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
-  annotation_custom(img_Pisc, xmin = 37, xmax = 46, ymin = 0.2, ymax = 0.7) +
-  annotate("text", x = 41, y = 1, label = "Piscivore") +
+  scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.5)) +
+  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.3)) +
+  annotate("text", x = 75, y = 1, label = "Piscivore") +
   labs(x = bquote("Biomass (g /" ~m^2~")")) +
   guides(fill = guide_legend(title = "Seabird-nutrient load"),
          col = guide_legend(title = "Seabird-nutrient load")) +
   theme(panel.background = element_rect(fill = "transparent"),
         axis.line = element_line(colour = "black"),
         axis.title.y = element_blank()) +
-  coord_cartesian(xlim = c(0, 45), clip = "off")
+  coord_cartesian(xlim = c(0, 80), clip = "off")
 
 uvc_biomass.pred.plot.Cora <- ggplot(data = uvc_biomass.pred %>% filter(FG == "Corallivore")) +
+  annotation_custom(img_Cora, xmin = 13.5, xmax = 17, ymin = 0.25, ymax = 0.8) +
   stat_slab(aes(x = .epred, fill = Location, col = Location,
                    group = Location), orientation = "horizontal") +
   geom_jitter(data = uvc_biomass.mod_data %>% filter(FG == "Corallivore"), 
-              aes(x = Biomass_m, y = 0, fill = Location),
-              size = 1.5, pch = 21, col = "black", height = 0.1, alpha = 0.3) +
+              aes(x = Biomass_m, y = 0.2, fill = Location),
+              size = 1.5, pch = 21, col = "black", height = 0.2, alpha = 0.7) +
   stat_pointinterval(aes(x = .epred, fill = Location, col = Location), 
                      point_size = 1.5, pch = 21, col = "black", position = position_dodge(width = 0.4, preserve = "single")) +
-  scale_color_manual(values = c("#0067A4", "#BF0033")) +
-  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
-  annotation_custom(img_Cora, xmin = 6, xmax = 7, ymin = 0.2, ymax = 0.7) +
-  annotate("text", x = 6.28, y = 1, label = "Corallivore") +
+  scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.5)) +
+  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.3)) +
+  annotate("text", x = 14.9, y = 1, label = "Corallivore") +
   labs(x = bquote("Biomass (g /" ~m^2~")")) +
   guides(fill = guide_legend(title = "Seabird-nutrient load"),
          col = guide_legend(title = "Seabird-nutrient load")) +
   theme(panel.background = element_rect(fill = "transparent"),
         axis.line = element_line(colour = "black"),
         axis.title.y = element_blank()) +
-  coord_cartesian(xlim = c(0, 7), clip = "off")
+  coord_cartesian(xlim = c(0, 16), clip = "off")
 
 uvc_biomass.pred.plot.Plan <- ggplot(data = uvc_biomass.pred %>% filter(FG == "Planktivore")) +
+  annotation_custom(img_Plan, xmin = 75, xmax = 120, ymin = 0.25, ymax = 0.8) +
   stat_slab(aes(x = .epred, fill = Location, col = Location,
                    group = Location), orientation = "horizontal") +
   geom_jitter(data = uvc_biomass.mod_data %>% filter(FG == "Planktivore"), 
-              aes(x = Biomass_m, y = 0, fill = Location),
-              size = 1.5, pch = 21, col = "black", height = 0.1, alpha = 0.3) +
+              aes(x = Biomass_m, y = 0.2, fill = Location),
+              size = 1.5, pch = 21, col = "black", height = 0.2, alpha = 0.7) +
   stat_pointinterval(aes(x = .epred, fill = Location, col = Location), 
                      point_size = 1.5, pch = 21, col = "black", position = position_dodge(width = 0.4, preserve = "single")) +
-  scale_color_manual(values = c("#0067A4", "#BF0033")) +
-  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
-  annotation_custom(img_Plan, xmin = 33, xmax = 42, ymin = 0.15, ymax = 0.9) +
+  scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.5)) +
+  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.3)) +
   scale_y_continuous(breaks = c(0.0, 0.4, 0.8)) +
-  annotate("text", x = 35.4, y = 1.2, label = "Planktivore") +
+  annotate("text", x = 90, y = 1, label = "Planktivore") +
   labs(x = bquote("Biomass (g /" ~m^2~")")) +
   guides(fill = guide_legend(title = "Seabird-nutrient load"),
          col = guide_legend(title = "Seabird-nutrient load")) +
   theme(panel.background = element_rect(fill = "transparent"),
         axis.line = element_line(colour = "black"),
         axis.title.y = element_blank()) +
-  coord_cartesian(xlim = c(0, 40), ylim = c(0, 1), clip = "off")
+  coord_cartesian(xlim = c(0, 100), clip = "off")
 ```
 
 # VI. 2. c. Biomass with depth
 
 ```{r uvc-biomass-depth}
 
-uvc_biomass.mod_depth <- brm(log(Biomass_m) ~ Location + Location:Depth, data = uvc_data_biomass)
+uvc_biomass.mod_depth <- brm(Biomass_m ~ Location + Location:Depth, family = lognormal, prior = priors, iter = 8000, warmup = 4000, cores = 4, 
+                             data = uvc_data_biomass)
 
 summary(uvc_biomass.mod_depth)
+pp_check(uvc_biomass.mod_depth)
+
+summary(rhat(uvc_biomass.mod_depth)) #gelman
+geweke_res <- as.mcmc(uvc_biomass.mod_depth) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
 
 # posterior prediction for 1000 draws
 uvc_biomass.mod_depth.pred <- uvc_data_biomass %>% 
   group_by(Location) %>%  
-  data_grid(Depth = seq_range(3.5:11.5, n = 100)) %>%
-  add_epred_draws(uvc_biomass.mod_depth, ndraws = 1000, re_formula = NA, allow.new.levels = T)  %>% 
-  mutate(.epred = exp(.epred))
+  data_grid(Depth = seq_range(0:12, n = 100)) %>%
+  add_epred_draws(uvc_biomass.mod_depth, ndraws = 1000, re_formula = NA, allow.new.levels = T)
 
-uvc_biomass.mod_depth.pred.plot <- ggplot(uvc_biomass.mod_depth.pred, aes(x = Depth, y = Biomass_m, color = Location)) +
-  stat_lineribbon(aes(y = .epred, color = Location), .width = c(.95, .80, .50)) +
-  geom_point(data = uvc_data_biomass, 
-             aes(color = Location), alpha = 0.8) +
-  scale_fill_grey(start = 0.95, end = 0.7) +
+uvc_biomass.mod_depth.pred.plot1 <- ggplot(uvc_biomass.mod_depth.pred, aes(x = Depth, y = Biomass_m, color = Location)) +
+  stat_lineribbon(aes(y = .epred, color = Location, fill = Location), .width = .50) +
+  geom_point(data = uvc_data_biomass, color = "black", size = 2.2) +
+  geom_point(data = uvc_data_biomass, aes(color = Location), size = 2) +
   scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
+  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.2)) +
+  annotate("text", x = 10.5, y = 620, label = "All") +
   theme(axis.line = element_line(colour = "black"),
         axis.title.y = element_text(colour = "transparent"),
         panel.background = element_rect(fill = "transparent"),
         legend.position = c(0.87, 0.7)) +
   labs(y = bquote("Biomass (g/" ~m^2~")"),
        x = "Depth (m)") +
-  guides(col = guide_legend(title = "Seabird-nutrient load"),
-         fill = guide_legend(title = "CI")) +
-  coord_cartesian(ylim = c(0,650), xlim = c(3.5, 11))
+  guides(col = "none",
+         fill = guide_legend(title = "50% CI")) +
+  coord_cartesian(ylim = c(0,650), xlim = c(0, 11))
+
+uvc_biomass.mod_depth.pred.plot
+uvc_biomass.mod_depth.pred.plot1
+hypothesis(uvc_biomass.mod_depth, "LocationHigh:Depth < LocationLow:Depth")
+hypothesis(uvc_biomass.mod_depth, "LocationHigh:Depth < 0")
+hypothesis(uvc_biomass.mod_depth, "LocationLow:Depth < 0")
 ```
 
 ```{r uvc-biomass-depth-herb}
 
-uvc_biomass.mod_Herb <- brm(log(Biomass_m) ~ Location + Location:Depth, data = uvc_data_biomass_FG %>% 
+uvc_biomass.mod_Herb <- brm(Biomass_m ~ Location + Location:Depth, family = lognormal, prior = priors, data = uvc_data_biomass_FG %>% 
                               filter(FG == "Herbivore"))
 
 summary(uvc_biomass.mod_Herb)
+pp_check(uvc_biomass.mod_Herb)
+
+summary(rhat(uvc_biomass.mod_Herb)) #gelman
+geweke_res <- as.mcmc(uvc_biomass.mod_Herb) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
 
 # posterior prediction for 1000 draws
 uvc_biomass.mod_Herb.depth.pred <- uvc_data_biomass_FG %>% 
   filter(FG == "Herbivore") %>% 
   group_by(Location) %>% 
-  data_grid(Depth = seq_range(3.5:11.5, n = 100)) %>%
-  add_epred_draws(uvc_biomass.mod_Herb, ndraws = 1000, re_formula = NA, allow.new.levels = T)  %>% 
-  mutate(.epred = exp(.epred))
+  data_grid(Depth = seq_range(0:12, n = 100)) %>%
+  add_epred_draws(uvc_biomass.mod_Herb, ndraws = 1000, re_formula = NA, allow.new.levels = T)
 
 uvc_biomass.mod_Herb.pred.plot <- ggplot(uvc_biomass.mod_Herb.depth.pred, aes(x = Depth, y = Biomass_m, color = Location)) +
-  stat_lineribbon(aes(y = .epred, color = Location), .width = c(.95, .80, .50)) +
-  geom_point(data = uvc_data_biomass_FG %>% filter(FG == "Herbivore"), 
-             aes(color = Location), alpha = 0.8) +
-  scale_fill_grey(start = 0.95, end = 0.7) +
+  stat_lineribbon(aes(y = .epred, color = Location, fill = Location), .width = .50) +
+  geom_point(data = uvc_data_biomass_FG %>% filter(FG == "Herbivore"), color = "black", size = 2.2) +
+  geom_point(data = uvc_data_biomass_FG %>% filter(FG == "Herbivore"), aes(color = Location), size = 2) +
   scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
+  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.2)) +
+  annotate("text", x = 9.5, y = 600, label = "Herbivore") +
   theme(legend.position = c(0.87, 0.7)) +
   labs(y = bquote("Biomass (g/" ~m^2~")"),
        x = "Depth (m)") +
-  guides(col = guide_legend(title = "Seabird-nutrient load"),
-         fill = guide_legend(title = "CI")) +
-  coord_cartesian(ylim = c(0,650), xlim = c(3.5, 11)) +
+  guides(col = "none",
+         fill = guide_legend(title = "50% CI")) +
+  coord_cartesian(ylim = c(0,650), xlim = c(0, 11)) +
   theme(axis.line = element_line(colour = "black"),
         axis.title.y = element_text(colour = "white"),
         panel.background = element_rect(fill = "transparent"))
+
+uvc_biomass.mod_Herb.pred.plot
+
+hypothesis(uvc_biomass.mod_Herb, "LocationHigh:Depth < LocationLow:Depth")
+hypothesis(uvc_biomass.mod_Herb, "LocationHigh:Depth < 0")
+hypothesis(uvc_biomass.mod_Herb, "LocationLow:Depth < 0")
 ```
 
-```{r uvc-biomass-depth-pisc}
 
-uvc_biomass.mod_Pisc <- brm(log(Biomass_m) ~ Location + Location:Depth, data = uvc_data_biomass_FG %>% 
-                              filter(FG == "Piscivore"))
+```{r uvc-biomass-depth-other}
+
+uvc_biomass.mod_other <- brm(Biomass_m ~ Location + Location:Depth, family = lognormal, prior = priors, data = uvc_data_biomass_FG %>% 
+                              filter(FG != "Herbivore") %>% group_by(Site) %>% mutate(Biomass_m = sum(Biomass_m, na.rm = T)) %>% 
+                               distinct(Site, Depth, Biomass_m, Location))
+
+summary(uvc_biomass.mod_other)
+pp_check(uvc_biomass.mod_other)
+
+summary(rhat(uvc_biomass.mod_other)) #gelman
+geweke_res <- as.mcmc(uvc_biomass.mod_other) %>% geweke.diag()
+z_scores <- c(geweke_res[[1]]$z, geweke_res[[2]]$z, geweke_res[[3]]$z, geweke_res[[4]]$z)
+sum(c(z_scores < -1.96, z_scores > 1.96))/120 #geweke
 
 # posterior prediction for 1000 draws
-uvc_biomass.mod_Pisc.depth.pred <- uvc_data_biomass_FG %>% 
-  filter(FG == "Piscivore") %>%
+uvc_biomass.mod_other.depth.pred <- uvc_data_biomass_FG %>% 
+                              filter(FG != "Herbivore") %>% group_by(Site) %>% mutate(Biomass_m = sum(Biomass_m, na.rm = T)) %>% 
+                               distinct(Site, Depth, Biomass_m, Location) %>% ungroup() %>% 
   group_by(Location) %>% 
-  data_grid(Depth = seq_range(3.5:11.5, n = 100)) %>%
-  add_epred_draws(uvc_biomass.mod_Pisc, ndraws = 1000, re_formula = NA, allow.new.levels = T)  %>% 
-  mutate(.epred = exp(.epred))
+  data_grid(Depth = seq_range(0:12, n = 100)) %>%
+  add_epred_draws(uvc_biomass.mod_other, ndraws = 1000, re_formula = NA, allow.new.levels = T)
 
-uvc_biomass.mod_Pisc.pred.plot <- ggplot(uvc_biomass.mod_Pisc.depth.pred, aes(x = Depth, y = Biomass_m, color = Location)) +
-  stat_lineribbon(aes(y = .epred, color = Location), .width = c(.95, .80, .50)) +
-  geom_point(data = uvc_data_biomass_FG %>% filter(FG == "Piscivore"), 
-             aes(color = Location), alpha = 0.8) +
-  scale_fill_grey(start = 0.95, end = 0.7) +
+uvc_biomass.mod_other.pred.plot <- ggplot(uvc_biomass.mod_other.depth.pred, aes(x = Depth, y = Biomass_m, color = Location)) +
+  stat_lineribbon(aes(y = .epred, color = Location, fill = Location), .width = .50) +
+  geom_point(data = uvc_data_biomass_FG %>% 
+                              filter(FG != "Herbivore") %>% group_by(Site) %>% mutate(Biomass_m = sum(Biomass_m, na.rm = T)) %>% 
+                               distinct(Site, Depth, Biomass_m, Location), color = "black", size = 2.2) +
+  geom_point(data = uvc_data_biomass_FG %>% 
+                              filter(FG != "Herbivore") %>% group_by(Site) %>% mutate(Biomass_m = sum(Biomass_m, na.rm = T)) %>% 
+                               distinct(Site, Depth, Biomass_m, Location), 
+             aes(color = Location), size = 2) +
   scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
+  scale_fill_manual(values = alpha(c("#0067A4", "#BF0033"), 0.2)) +
+  annotate("text", x = 7.5, y = 500, label = "Other feeding group") +
   theme(legend.position = c(0.87, 0.7)) +
   labs(y = bquote("Biomass (g/" ~m^2~")"),
        x = "Depth (m)") +
-  guides(col = guide_legend(title = "Seabird-nutrient load"),
-         fill = guide_legend(title = "CI")) +
+  guides(col = "none",
+         fill = guide_legend(title = "50% CI")) +
+  coord_cartesian(xlim = c(0, 11)) +
   theme(axis.line = element_line(colour = "black"),
         axis.title.y = element_text(colour = "white"),
-        panel.background = element_rect(fill = "transparent")) +
-  coord_cartesian(ylim = c(0,80), xlim = c(3.5, 11))
-```
+        panel.background = element_rect(fill = "transparent"))
 
-```{r uvc-biomass-depth-inv}
-
-uvc_biomass.mod_Inv <- brm(log(Biomass_m) ~ Location + Location:Depth, data = uvc_data_biomass_FG %>% 
-                              filter(FG == "Invertivore"))
-
-# posterior prediction for 1000 draws
-uvc_biomass.mod_Inv.depth.pred <- uvc_data_biomass_FG %>% 
-  filter(FG == "Invertivore") %>%
-  group_by(Location) %>% 
-  data_grid(Depth = seq_range(3.5:11.5, n = 100)) %>%
-  add_epred_draws(uvc_biomass.mod_Inv, ndraws = 1000, re_formula = NA, allow.new.levels = T) %>% 
-  mutate(.epred = exp(.epred))
-
-uvc_biomass.mod_Inv.pred.plot <- ggplot(uvc_biomass.mod_Inv.depth.pred, aes(x = Depth, y = Biomass_m, color = Location)) +
-  stat_lineribbon(aes(y = .epred, color = Location), .width = c(.95, .80, .50)) +
-  geom_point(data = uvc_data_biomass_FG %>% filter(FG == "Invertivore"), 
-             aes(color = Location), alpha = 0.8) +
-  scale_fill_grey(start = 0.95, end = 0.7) +
-  scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
-  theme(legend.position = c(0.87, 0.7)) +
-  labs(y = bquote("Biomass (g/" ~m^2~")"),
-       x = "Depth (m)") +
-  guides(col = guide_legend(title = "Seabird-nutrient load"),
-         fill = guide_legend(title = "CI")) +
-  theme(axis.line = element_line(colour = "black"),
-        panel.background = element_rect(fill = "transparent")) +
-  coord_cartesian(ylim = c(0,35), xlim = c(3.5, 11)) 
-```
-
-```{r uvc-biomass-depth-plank}
-
-uvc_biomass.mod_Plan <- brm(log(Biomass_m) ~ Location + Location:Depth, data = uvc_data_biomass_FG %>% 
-                              filter(FG == "Planktivore"))
-
-# posterior prediction for 1000 draws
-uvc_biomass.mod_Plan.depth.pred <- uvc_data_biomass_FG %>% 
-  filter(FG == "Planktivore") %>%
-  group_by(Location) %>% 
-  data_grid(Depth = seq_range(3.5:11.5, n = 100)) %>%
-  add_epred_draws(uvc_biomass.mod_Plan, ndraws = 1000, re_formula = NA, allow.new.levels = T)  %>% 
-  mutate(.epred = exp(.epred))
-
-uvc_biomass.mod_Plan.pred.plot <- ggplot(uvc_biomass.mod_Plan.depth.pred, aes(x = Depth, y = Biomass_m, color = Location)) +
-  stat_lineribbon(aes(y = .epred, color = Location), .width = c(.95, .80, .50)) +
-  geom_point(data = uvc_data_biomass_FG %>% filter(FG == "Planktivore"), 
-             aes(color = Location), alpha = 0.8) +
-  scale_fill_grey(start = 0.95, end = 0.7) +
-  scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
-  theme(legend.position = c(0.87, 0.7)) +
-  labs(y = bquote("Biomass (g/" ~m^2~")"),
-       x = "Depth (m)") +
-  guides(col = guide_legend(title = "Seabird-nutrient load"),
-         fill = guide_legend(title = "CI")) +
-  theme(axis.line = element_line(colour = "black"),
-        axis.title.y = element_text(colour = "white"),
-        panel.background = element_rect(fill = "transparent")) +
-  coord_cartesian(ylim = c(0,35), xlim = c(3.5, 11)) 
-```
-
-```{r uvc-biomass-depth-omni}
-
-uvc_biomass.mod_Omni <- brm(log(Biomass_m) ~ Location + Location:Depth, data = uvc_data_biomass_FG %>% 
-                              filter(FG == "Omnivore"))
-
-# posterior prediction for 1000 draws
-uvc_biomass.mod_Omni.depth.pred <- uvc_data_biomass_FG %>% 
-  filter(FG == "Omnivore") %>%
-  group_by(Location) %>% 
-  data_grid(Depth = seq_range(3.5:11.5, n = 100)) %>%
-  add_epred_draws(uvc_biomass.mod_Omni, ndraws = 1000, re_formula = NA, allow.new.levels = T)  %>% 
-  mutate(.epred = exp(.epred))
-
-uvc_biomass.mod_Omni.pred.plot <- ggplot(uvc_biomass.mod_Omni.depth.pred, aes(x = Depth, y = Biomass_m, color = Location)) +
-  stat_lineribbon(aes(y = .epred, color = Location), .width = c(.95, .80, .50)) +
-  geom_point(data = uvc_data_biomass_FG %>% filter(FG == "Omnivore"), 
-             aes(color = Location), alpha = 0.8) +
-  scale_fill_grey(start = 0.95, end = 0.7) +
-  scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
-  theme(legend.position = c(0.87, 0.7)) +
-  labs(y = bquote("Biomass (g/" ~m^2~")"),
-       x = "Depth (m)") +
-  guides(col = guide_legend(title = "Seabird-nutrient load"),
-         fill = guide_legend(title = "CI")) +
-  theme(axis.line = element_line(colour = "black"),
-        axis.title.y = element_text(colour = "white"),
-        panel.background = element_rect(fill = "transparent")) +
-  coord_cartesian(ylim = c(0,20), xlim = c(3.5, 11)) 
-```
-
-```{r uvc-biomass-depth-cora}
-
-uvc_biomass.mod_Cora <- brm(log(Biomass_m) ~ Location + Location:Depth, data = uvc_data_biomass_FG %>% 
-                              filter(FG == "Corallivore"))
-
-# posterior prediction for 1000 draws
-uvc_biomass.mod_Cora.depth.pred <- uvc_data_biomass_FG %>% 
-  filter(FG == "Corallivore") %>%
-  group_by(Location) %>% 
-  data_grid(Depth = seq_range(3.5:11.5, n = 100)) %>%
-  add_epred_draws(uvc_biomass.mod_Cora, ndraws = 1000, re_formula = NA, allow.new.levels = T)  %>% 
-  mutate(.epred = exp(.epred))
-
-uvc_biomass.mod_Cora.pred.plot <- ggplot(uvc_biomass.mod_Cora.depth.pred, aes(x = Depth, y = Biomass_m, color = Location)) +
-  stat_lineribbon(aes(y = .epred, color = Location), .width = c(.95, .80, .50)) +
-  geom_point(data = uvc_data_biomass_FG %>% filter(FG == "Corallivore"), 
-             aes(color = Location), alpha = 0.8) +
-  scale_fill_grey(start = 0.95, end = 0.7) +
-  scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
-  theme(legend.position = c(0.87, 0.7)) +
-  labs(y = bquote("Biomass (g/" ~m^2~")"),
-       x = "Depth (m)") +
-  guides(col = guide_legend(title = "Seabird-nutrient load"),
-         fill = guide_legend(title = "CI")) +
-  theme(axis.line = element_line(colour = "black"),
-        axis.title.y = element_text(colour = "white"),
-        panel.background = element_rect(fill = "transparent")) +
-  coord_cartesian(ylim = c(0,8), xlim = c(3.5, 11)) 
-```
-
-```{r uvc-biomass-depth-carn}
-
-uvc_biomass.mod_Carn <- brm(log(Biomass_m) ~ Location + Location:Depth, data = uvc_data_biomass_FG %>% 
-                              filter(FG == "Carnivore"))
-
-# posterior prediction for 1000 draws
-uvc_biomass.mod_Carn.depth.pred <- uvc_data_biomass_FG %>% 
-  filter(FG == "Carnivore") %>%
-  group_by(Location) %>% 
-  data_grid(Depth = seq_range(3.5:11.5, n = 100)) %>%
-  add_epred_draws(uvc_biomass.mod_Carn, ndraws = 1000, re_formula = NA, allow.new.levels = T)  %>% 
-  mutate(.epred = exp(.epred))
-
-uvc_biomass.mod_Carn.pred.plot <- ggplot(uvc_biomass.mod_Carn.depth.pred, aes(x = Depth, y = Biomass_m, color = Location)) +
-  stat_lineribbon(aes(y = .epred, color = Location), .width = c(.95, .80, .50)) +
-  geom_point(data = uvc_data_biomass_FG %>% filter(FG == "Carnivore"), 
-             aes(color = Location), alpha = 0.8) +
-  scale_fill_grey(start = 0.95, end = 0.7) +
-  scale_color_manual(values = alpha(c("#0067A4", "#BF0033"), 0.7)) +
-  theme(legend.position = c(0.87, 0.7)) +
-  labs(y = bquote("Biomass (g/" ~m^2~")"),
-       x = "Depth (m)") +
-  guides(col = guide_legend(title = "Seabird-nutrient load"),
-         fill = guide_legend(title = "CI")) +
-  theme(axis.line = element_line(colour = "black"),
-        axis.title.y = element_text(colour = "white"),
-        panel.background = element_rect(fill = "transparent")) +
-  coord_cartesian(ylim = c(0,40), xlim = c(3.5, 11)) 
+uvc_biomass.mod_other.pred.plot
 ```
 
 ```{r uvc-biomass-depth-plot}
 
 uvc_biomass_depth.plot <- ggarrange(
-  uvc_biomass.pred.plot.all + rremove("x.title") + rremove("legend"),
-  uvc_biomass.mod_depth.pred.plot + rremove("x.title"),
-  uvc_biomass.pred.plot.Herb + rremove("x.title") + rremove("legend"),
-  uvc_biomass.mod_Herb.pred.plot + rremove("x.title") + rremove("legend"),
-  uvc_biomass.pred.plot.Omni + rremove("x.title") + rremove("legend"),
-  uvc_biomass.mod_Omni.pred.plot + rremove("x.title") + rremove("legend"),
-  uvc_biomass.pred.plot.Inv + rremove("x.title") + rremove("legend"),
-  uvc_biomass.mod_Inv.pred.plot + rremove("x.title") + rremove("legend"),
-  uvc_biomass.pred.plot.Carn + rremove("x.title") + rremove("legend"),
-  uvc_biomass.mod_Carn.pred.plot + rremove("x.title") + rremove("legend"),
-  uvc_biomass.pred.plot.Pisc + rremove("x.title") + rremove("legend"),
-  uvc_biomass.mod_Pisc.pred.plot + rremove("x.title") + rremove("legend"),
-  uvc_biomass.pred.plot.Cora + rremove("x.title") + rremove("legend"),
-  uvc_biomass.mod_Cora.pred.plot + rremove("x.title"),
-  uvc_biomass.pred.plot.Plan + rremove("legend"),
-  uvc_biomass.mod_Plan.pred.plot + rremove("legend"),
-  nrow = 8, ncol = 2, heights = c(rep(1, 14), 2, 2),
-  labels = c("a", "b", rep("", 14)),
-  common.legend = T, legend = "top")
+  ggarrange(uvc_biomass.pred.plot.all + rremove("x.title"),
+            uvc_biomass.pred.plot.Herb + rremove("x.title"),
+            uvc_biomass.pred.plot.Omni + rremove("x.title"),
+            uvc_biomass.pred.plot.Inv + rremove("x.title"),
+            uvc_biomass.pred.plot.Carn + rremove("x.title"),
+            uvc_biomass.pred.plot.Pisc + rremove("x.title"),
+            uvc_biomass.pred.plot.Cora + rremove("x.title"),
+            uvc_biomass.pred.plot.Plan,
+            nrow = 8, ncol = 1, heights = c(1.2, rep(1, 6), 1.3), 
+            common.legend = T, legend = "top"),
+  ggarrange(uvc_biomass.mod_depth.pred.plot + rremove("x.title"),
+            uvc_biomass.mod_Herb.pred.plot + rremove("x.title"),
+            uvc_biomass.mod_other.pred.plot,
+            nrow = 3, ncol = 1, common.legend = T, legend = "top"),
+  nrow = 1, ncol = 2, labels = c("a", "b"), hjust = c(0, -3), vjust = c(4, 4))
 
-ggsave("figures/Fig5.png", uvc_biomass_depth.plot, width = 6, height = 8, units = "in", dpi = 600)
-ggsave("figures/Fig5.pdf", uvc_biomass_depth.plot, width = 6, height = 8, units = "in", dpi = 600)
+uvc_biomass_depth.plot
+
+#ggsave("figures/Fig5.png", uvc_biomass_depth.plot, width = 6, height = 9, units = "in", dpi = 600)
+#ggsave("figures/Fig5.pdf", uvc_biomass_depth.plot, width = 6, height = 9, units = "in", dpi = 600)
 ```
