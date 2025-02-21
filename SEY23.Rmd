@@ -23,6 +23,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r import}
 # 1. Required packages ----
 
+library(loo)
 library(cowplot)
 library(ggnewscale)
 library(grid)
@@ -31,6 +32,7 @@ library(gstat)
 library(metR)
 library(magick)
 library(ggplot2)
+library(ggcheck)
 library(viridis)
 library(sf)
 library(stars)
@@ -61,8 +63,8 @@ fish_data <- read.csv("data/SEY23_Crypto_data.csv") %>%
 site_data <- read.csv("data/SEY23_Site_info.csv") %>% 
   filter(Site != "R") %>% 
   mutate(Depth_cat = ifelse(Depth > 7, "deep", "shallow")) %>% 
-  mutate(r = CSL/pi,  #2pir = 2CSL
-         Area = 2*pi*r^2) #because half surface, not sphere but hemisphere. if surface = 4pir2
+  mutate(r = CSL/pi,  #
+         Area = 2*pi*r^2) 
 
 cover_data <- read.csv("data/SEY23_Benthic_cover.csv") %>% 
   group_by(Site, Benthic) %>% 
@@ -145,6 +147,44 @@ img_Cora <- image_read("figures/silhouettes/Chaetrif.png") %>%
 img_Plan <- image_read("figures/silhouettes/Chroatri.png") %>% 
   image_flatten() %>% as.raster() %>% 
   rasterGrob(interpolate = T)
+
+data_Enneabel <- data %>% 
+  filter(GENSPE == "Enneabel") %>% 
+  mutate(ntot = n()) %>% 
+  group_by(Site) %>% 
+  mutate(nsite = n()) %>% 
+  ungroup() %>% 
+  mutate(meannsite = mean(nsite, na.rm = T),
+         sdsite = sd(nsite, na.rm = T)) %>% 
+  distinct(GENSPE, ntot, meannsite, sdsite)
+
+data_Enneabel
+
+data_Eviobipu <- data %>% 
+  filter(GENSPE == "Eviobipu") %>% 
+  mutate(ntot = n()) %>% 
+  group_by(Site) %>% 
+  mutate(nsite = n()) %>% 
+  ungroup() %>% 
+  mutate(meannsite = mean(nsite, na.rm = T),
+         sdsite = sd(nsite, na.rm = T)) %>% 
+  distinct(GENSPE, ntot, meannsite, sdsite)
+
+data_Eviobipu
+
+data_Cirrfila <- data %>% 
+  filter(GENSPE == "Cirrfila") %>% 
+  mutate(ntot = n()) %>% 
+  group_by(Site) %>% 
+  mutate(nsite = n()) %>% 
+  ungroup() %>% 
+  mutate(meannsite = mean(nsite, na.rm = T),
+         sdsite = sd(nsite, na.rm = T))%>% 
+  distinct(GENSPE, ntot, meannsite, sdsite)
+
+data_Cirrfila
+
+28/770
 ```
 
 # Fig 1 - Sampling site map
@@ -505,15 +545,14 @@ contrasts_d15N.source <- contrast(em_d15N.source, method = "tukey") %>%
 
 contrasts_d15N.source
 hypothesis(d15Nmod_source, "0 > taxlocSponge.Low")
-test <- hypothesis(d15Nmod_source, "taxlocTurf.High > taxlocTurf.Low")
-print(test, digits = 6) 
+hypothesis(d15Nmod_source, "taxlocTurf.High > taxlocTurf.Low")
 ```
 
 # Fig S2. a - d15N across both sources
 
 ```{r d15N-source-plot}
 
-d15N_source.pred.plot1 <- ggplot(data = d15N_source.pred) + 
+d15N_source.pred.plot <- ggplot(data = d15N_source.pred) + 
   stat_slab(aes(y = reorder(Source, ordervar, decreasing = T), x = .epred, fill = Location, col = Location,
                    group = Location), height = 0.8, slab_linewidth = 0.7, orientation = "horizontal") +
   geom_jitter(data = source_SIA_mod %>% filter(!is.na(Source))  %>% 
@@ -536,7 +575,6 @@ d15N_source.pred.plot1 <- ggplot(data = d15N_source.pred) +
          col = guide_legend(nrow = 1, title = "Seabird-nutrient load"))
 
 d15N_source.pred.plot
-d15N_source.pred.plot1
 ```
 
 # I. 1. b. Effect of depth on source d15N
@@ -636,8 +674,8 @@ d15N.source.depth.pred <- ggarrange(d15N.turf.depth.pred.plot,
 
 d15N.source.depth.pred
 
-#ggsave("figures/FigS2.png", d15N.source.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
-#ggsave("figures/FigS2.pdf", d15N.source.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/FigS3.png", d15N.source.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/FigS3.pdf", d15N.source.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
 
 ```
 
@@ -828,8 +866,8 @@ d15N.crypto.depth.pred <- ggarrange(d15N.Enneabel.depth.pred.plot,
                                labels = c("a", "b"),
                                ncol = 2, common.legend = T, legend = "top")
 
-#ggsave("figures/FigS3.png", d15N.crypto.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
-#ggsave("figures/FigS3.pdf", d15N.crypto.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/FigS4.png", d15N.crypto.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/FigS4.pdf", d15N.crypto.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
 ```
 
 # II. Stable isotope analysis - d13C
@@ -1002,8 +1040,8 @@ d13C.source.depth.pred <- ggarrange(d13C.turf.depth.pred.plot,
                                     hjust = c(-2, 0.3),
                                     ncol = 2, common.legend = T, legend = "top")
 
-#ggsave("figures/FigS4.png", d13C.source.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
-#ggsave("figures/FigS4.pdf", d13C.source.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/FigS5.png", d13C.source.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/FigS5.pdf", d13C.source.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
 ```
 
 # II. 2. Cryptobenthic fish
@@ -1214,8 +1252,8 @@ d13C.crypto.depth.pred <- ggarrange(d13C.Enneabel.depth.pred.plot,
                                labels = c("a", "b"),
                                ncol = 2, common.legend = T, hjust = c(-1.3, 0.7), legend = "top")
 
-#ggsave("figures/FigS5.png", d13C.crypto.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
-#ggsave("figures/FigS5.pdf", d13C.crypto.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/FigS6.png", d13C.crypto.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/FigS6.pdf", d13C.crypto.depth.pred, width = 6, height = 4, units = "in", dpi = 600)
 
 d13C.crypto.depth.pred
 ```
@@ -1227,96 +1265,67 @@ d13C.crypto.depth.pred
 # format data
 crypto_SIA_mix_Enneabel_cont <- data %>% 
   filter(GENSPE == "Enneabel") %>% 
-  select(d13C, d15N, Location, Depth) 
+  select(d13C, Location, Depth) 
 
 crypto_SIA_mix_Eviogutt_cont <- data %>% 
   filter(GENSPE == "Eviogutt") %>% 
-  select(d13C, d15N, Location, Depth) 
-
-crypto_SIA_mix_Cirrfila_cont <- data %>% 
-  filter(GENSPE == "Cirrfila") %>% 
-  select(d13C, d15N, Location, Depth) 
+  select(d13C, Location, Depth) 
 
 crypto_sources_SIA_mix_cont <- source_SIA %>% 
-  select(Source, d13C, d15N, Depth, Location) %>% 
+  select(Source, d13C, Depth, Location) %>% 
   group_by(Source, Location) %>% 
-  summarize(Meand13C = mean(d13C, na.rm = T), Meand15N = mean(d15N, na.rm = T), SDd15N = sd(d15N, na.rm = T), SDd13C = sd(d13C, na.rm = T), n = n()) %>% 
+  summarize(Meand13C = mean(d13C, na.rm = T), SDd13C = sd(d13C, na.rm = T), n = n()) %>% 
   filter(Source %in% c("Turf", "Sponge")) %>% 
   mutate(Source = ifelse(Source == "Turf", "Benthic", "Pelagic")) %>% 
   ungroup()
 
-write.csv(crypto_SIA_mix_Enneabel_cont, "output_data/crypto_SIA_mix_Enneabel_cont.csv", row.names = FALSE)
-write.csv(crypto_SIA_mix_Eviogutt_cont, "output_data/crypto_SIA_mix_Eviogutt_cont.csv", row.names = FALSE)
-write.csv(crypto_SIA_mix_Cirrfila_cont, "output_data/crypto_SIA_mix_Cirrfila_cont.csv", row.names = FALSE)
-write.csv(crypto_sources_SIA_mix_cont, "output_data/crypto_sources_SIA_mix_cont.csv", row.names = FALSE)
+write.csv(crypto_SIA_mix_Enneabel_cont, "output_data/crypto_SIA_mix_Enneabel_cont_one.csv", row.names = FALSE)
+write.csv(crypto_SIA_mix_Eviogutt_cont, "output_data/crypto_SIA_mix_Eviogutt_cont_one.csv", row.names = FALSE)
+write.csv(crypto_sources_SIA_mix_cont, "output_data/crypto_sources_SIA_mix_cont_one.csv", row.names = FALSE)
 
 # load the mixture/consumer data
-Enneabel_mix <- load_mix_data("output_data/crypto_SIA_mix_Enneabel_cont.csv", 
-                            iso_names = c("d13C","d15N"), 
+Enneabel_mix <- load_mix_data("output_data/crypto_SIA_mix_Enneabel_cont_one.csv", 
+                            iso_names = c("d13C"), 
                             factors = c("Location"), 
                             fac_random = c(FALSE), 
                             fac_nested = c(FALSE), 
                             cont_effects = "Depth")
 
-Eviogutt_mix <- load_mix_data("output_data/crypto_SIA_mix_Eviogutt_cont.csv", 
-                            iso_names = c("d13C","d15N"), 
+Eviogutt_mix <- load_mix_data("output_data/crypto_SIA_mix_Eviogutt_cont_one.csv", 
+                            iso_names = c("d13C"), 
                             factors = c("Location"), 
                             fac_random = c(FALSE), 
                             fac_nested = c(FALSE), 
                             cont_effects = "Depth")
 
-Cirrfila_mix <- load_mix_data("output_data/crypto_SIA_mix_Cirrfila_cont.csv", 
-                            iso_names = c("d13C","d15N"), 
-                            factors = c("Location"), 
-                            fac_random = c(FALSE), 
-                            fac_nested = c(FALSE), 
-                            cont_effects = "Depth")
-
-sources_Enneabel_mix <- load_source_data("output_data/crypto_sources_SIA_mix_cont.csv",
+sources_Enneabel_mix <- load_source_data("output_data/crypto_sources_SIA_mix_cont_one.csv",
                                          source_factors = "Location", 
                                          conc_dep = FALSE, 
                                          data_type = "means", 
                                          Enneabel_mix)
 
-sources_Eviogutt_mix <- load_source_data("output_data/crypto_sources_SIA_mix_cont.csv",
+sources_Eviogutt_mix <- load_source_data("output_data/crypto_sources_SIA_mix_cont_one.csv",
                                          source_factors = "Location", 
                                          conc_dep = FALSE, 
                                          data_type = "means", 
                                          Eviogutt_mix)
 
-sources_Cirrfila_mix <- load_source_data("output_data/crypto_sources_SIA_mix_cont.csv",
-                                         source_factors = "Location", 
-                                         conc_dep = FALSE, 
-                                         data_type = "means", 
-                                         Cirrfila_mix)
-
-discr_Enneabel_mix <- load_discr_data("data/crypto_discr_SIA_mix.csv", Enneabel_mix)
-discr_Eviogutt_mix <- load_discr_data("data/crypto_discr_SIA_mix.csv", Eviogutt_mix)
-discr_Cirrfila_mix <- load_discr_data("data/crypto_discr_SIA_mix.csv", Cirrfila_mix)
+discr_Enneabel_mix <- load_discr_data("data/crypto_discr_SIA_mix_one.csv", Enneabel_mix)
+discr_Eviogutt_mix <- load_discr_data("data/crypto_discr_SIA_mix_one.csv", Eviogutt_mix)
 ```
 
 # III. 1. Enneapterygius abeli
 
 ```{r MM-Enneabel}
 
-# check isospace plot
-iso.Enneabel <- plot_data(filename = "isospace_plot", plot_save_pdf = F, plot_save_png = F, 
-          Enneabel_mix, sources_Enneabel_mix , discr_Enneabel_mix, return_obj = T) +
-  annotation_custom(img_Enneabel, xmin = -10, xmax = -5, ymin = 12.5, ymax = 13) +
-  theme_grey() + 
-  theme(panel.background = element_rect(fill = "transparent"), 
-        axis.line = element_line(colour = "black")) + 
-  scale_color_manual(values = c("#0067A4", "#BF0033"), labels = c("Seabird-rich", "Seabird-poor")) 
-
-
 # Write the JAGS model file
-model_filename <- "output_data/MixSIAR_model_Enneabel_cont.txt"   # Name of the JAGS model file
+model_filename <- "output_data/MixSIAR_model_Enneabel_cont_one.txt"   # Name of the JAGS model file
 resid_err <- TRUE
 process_err <- TRUE
 write_JAGS_model(model_filename, resid_err, process_err, Enneabel_mix, sources_Enneabel_mix)
 
 # run JAGS model (~20 min)
-jags.Enneabel.cont <- run_model(run = "normal", 
+jags.Enneabel.cont.one <- run_model(run = "extreme", 
                     Enneabel_mix, 
                     sources_Enneabel_mix, 
                     discr_Enneabel_mix, model_filename)
@@ -1346,15 +1355,15 @@ output_options <- list(summary_save = TRUE,
                        indiv_effect = TRUE)
 
 # assess model fit
-output_JAGS(jags.Enneabel.cont, Enneabel_mix, sources_Enneabel_mix, output_options)
+output_JAGS(jags.Enneabel.cont.one, Enneabel_mix, sources_Enneabel_mix, output_options)
 ```
 
 # Fig S6
 
 ```{r MM-Enneabel-plot}
-g.post.Enneabel <- output_posteriors(jags.Enneabel.cont, Enneabel_mix, sources_Enneabel_mix, output_options)
+g.post.Enneabel <- output_posteriors(jags.Enneabel.cont.one, Enneabel_mix, sources_Enneabel_mix, output_options)
 
-stats <- as.data.frame(output_stats(jags.Enneabel.cont, Enneabel_mix, sources_Enneabel_mix, output_options)) %>% 
+stats <- as.data.frame(output_stats(jags.Enneabel.cont.one, Enneabel_mix, sources_Enneabel_mix, output_options)) %>% 
   select(Mean) %>% 
   rownames_to_column("Source") %>% 
   separate(Source, c("val", "Location", "Source")) %>% 
@@ -1362,6 +1371,12 @@ stats <- as.data.frame(output_stats(jags.Enneabel.cont, Enneabel_mix, sources_En
   filter(val != "Epsilon")
 
 stats
+
+predicted_data_a <- ggplot_build(g.post.Enneabel$cont[[1]][[1]])$data[[1]]
+head(predicted_data_a)
+
+predicted_data_b <- ggplot_build(g.post.Enneabel$cont[[2]][[1]])$data[[1]]
+head(predicted_data_b)
 
 plot.Enneabel.mix.a <- g.post.Enneabel$cont[[1]][[1]] +
   scale_color_manual(values = c("#A4C689", "#4D8BC9")) +
@@ -1416,14 +1431,48 @@ plot.Enneabel.mix <- ggarrange(plot.Enneabel.mix.c + rremove("legend.title"), pl
                                labels = c("a", "b", "c", "d"), vjust = c(0.7, 0.7, -0.4, -0.4),
                                ncol = 2, nrow = 2, common.legend = T, legend = "top") 
 
-#ggsave("figures/FigS6.png", plot.Enneabel.mix, width = 6, height = 5, units = "in", dpi = 600)
-#ggsave("figures/FigS6.pdf", plot.Enneabel.mix, width = 6, height = 5, units = "in", dpi = 600)
+#ggsave("figures/Fig3.png", plot.Enneabel.mix, width = 6, height = 5, units = "in", dpi = 600)
+#ggsave("figures/Fig3.pdf", plot.Enneabel.mix, width = 6, height = 5, units = "in", dpi = 600)
 
 plot.Enneabel.mix
+get_data(plot.Enneabel.mix.a)
+get_data(plot.Enneabel.mix.b)
 
-# values
-get_data(plot.Enneabel.mix.a, local_only = FALSE)
-get_data(plot.Enneabel.mix.b, local_only = FALSE)
+# LOO and error
+
+observed <- crypto_SIA_mix_Enneabel_cont$d13C
+
+posterior_samples <- jags.Enneabel.cont.one$BUGSoutput$sims.list
+
+source_proportions <- posterior_samples$p.ind  # Source proportions from posterior
+isotope_means <- crypto_sources_SIA_mix_cont$Meand13C          # Source isotopic means
+isotope_sds <- crypto_sources_SIA_mix_cont$SDd13C             # Source isotopic SDs
+
+predict_isotope <- function(proportions, isotope_means) {
+  rowSums(proportions * isotope_means)  # Weighted mean of source contributions
+}
+
+predicted <- apply(source_proportions, 1, function(proportions) {
+  predict_isotope(proportions, isotope_means)
+})
+
+predicted_median <- apply(predicted, 1, median)
+
+multiplicative_errors <- observed / predicted_median
+
+error_summary <- summary(multiplicative_errors)
+print(error_summary)
+
+hist(multiplicative_errors, main = "Distribution of Multiplicative Error Terms",
+     xlab = expression(epsilon[j]), breaks = 20)
+
+# LOO analysis
+
+log_lik <- posterior_samples$loglik 
+loo_results <- loo(log_lik)
+
+# Print LOO results
+print(loo_results)
 ```
 
 # III. 2. Eviota guttata
@@ -1441,32 +1490,34 @@ iso.Eviogutt <- plot_data(filename = "isospace_plot", plot_save_pdf = F, plot_sa
 
 iso.Eviogutt
 # Write the JAGS model file
-model_filename <- "output_data/MixSIAR_model_Eviogutt_cont.txt"   
+model_filename <- "output_data/MixSIAR_model_Eviogutt_cont_one.txt"   
 resid_err <- TRUE
 process_err <- TRUE
 write_JAGS_model(model_filename, resid_err, process_err, Eviogutt_mix, sources_Eviogutt_mix)
 
 # run JAGS model (~20 min)
-jags.Eviogutt.cont <- run_model(run = "normal", 
+jags.Eviogutt.cont.one <- run_model(run = "extreme", 
                     Eviogutt_mix, 
                     sources_Eviogutt_mix, 
                     discr_Eviogutt_mix, model_filename)
 
 # assess model fit
-output_JAGS(jags.Eviogutt.cont, Eviogutt_mix, sources_Eviogutt_mix, output_options)
+output_JAGS(jags.Eviogutt.cont.one, Eviogutt_mix, sources_Eviogutt_mix, output_options)
 ```
 
 # Fig S7
 
 ```{r MM-Eviogutt-plot}
-g.post <- output_posteriors(jags.Eviogutt.cont, Eviogutt_mix, sources_Eviogutt_mix, output_options)
+g.post <- output_posteriors(jags.Eviogutt.cont.one, Eviogutt_mix, sources_Eviogutt_mix, output_options)
 
-stats <- as.data.frame(output_stats(jags.Eviogutt.cont, Eviogutt_mix, sources_Eviogutt_mix, output_options)) %>% 
+stats <- as.data.frame(output_stats(jags.Eviogutt.cont.one, Eviogutt_mix, sources_Eviogutt_mix, output_options)) %>% 
   select(Mean) %>% 
   rownames_to_column("Source") %>% 
   separate(Source, c("val", "Location", "Source")) %>% 
   pivot_wider(names_from = Location, values_from = Mean) %>% 
   filter(val != "Epsilon")
+
+stats
 
 plot.Eviogutt.mix.a <- g.post$cont[[1]][[1]] + 
   scale_color_manual(values = c("#A4C689", "#4D8BC9")) +
@@ -1521,47 +1572,47 @@ plot.Eviogutt.mix <- ggarrange(plot.Eviogutt.mix.c + rremove("legend.title"), pl
                                labels = c("a", "b", "c", "d"), vjust = c(0.7, 0.7, -0.4, -0.4),
                                ncol = 2, nrow = 2, common.legend = T, legend = "top") 
 
-#ggsave("figures/FigS7.png", plot.Eviogutt.mix, width = 6, height = 5, units = "in", dpi = 600)
-#ggsave("figures/FigS7.pdf", plot.Eviogutt.mix, width = 6, height = 5, units = "in", dpi = 600)
+ggsave("figures/FigS7.png", plot.Eviogutt.mix, width = 6, height = 5, units = "in", dpi = 600)
+ggsave("figures/FigS7.pdf", plot.Eviogutt.mix, width = 6, height = 5, units = "in", dpi = 600)
+
+get_data(plot.Eviogutt.mix.a)
+get_data(plot.Eviogutt.mix.b)
 
 plot.Eviogutt.mix
-```
 
-# III. 3. Cirripectes filamentosus
+observed <- crypto_SIA_mix_Eviogutt_cont$d13C
 
-```{r MM-Cirrfila}
+posterior_samples <- jags.Eviogutt.cont.one$BUGSoutput$sims.list
 
-# check isospace plot
-iso.Cirrfila <- plot_data(filename = "isospace_plot", plot_save_pdf = F, plot_save_png = F, 
-          Cirrfila_mix, sources_Cirrfila_mix , discr_Cirrfila_mix, return_obj = T) + 
-  annotation_custom(img_Cirrfila, xmin = -10, xmax = -5, ymin = 12.5, ymax = 13) +
-  theme_grey() + 
-  theme(panel.background = element_rect(fill = "transparent"), 
-        axis.line = element_line(colour = "black")) + 
-  scale_color_manual(values = c("#0067A4", "#BF0033"), labels = c("Seabird-rich", "Seabird-poor"))  
+source_proportions <- posterior_samples$p.ind  # Source proportions from posterior
+isotope_means <- crypto_sources_SIA_mix_cont$Meand13C          # Source isotopic means
+isotope_sds <- crypto_sources_SIA_mix_cont$SDd13C             # Source isotopic SDs
 
-iso.Cirrfila
+predict_isotope <- function(proportions, isotope_means) {
+  rowSums(proportions * isotope_means)  # Weighted mean of source contributions
+}
 
-# most data outside of source polygon
+predicted <- apply(source_proportions, 1, function(proportions) {
+  predict_isotope(proportions, isotope_means)
+})
 
-```
+predicted_median <- apply(predicted, 1, median)
 
-# Fig S8 - Combine all isospace plots
+multiplicative_errors <- observed / predicted_median
 
-```{r MM-iso-plot}
+error_summary <- summary(multiplicative_errors)
+print(error_summary)
 
-# check isospace plot
-iso.plot <- ggarrange(iso.Enneabel + 
-                        rremove("legend.title"), 
-                      iso.Eviogutt + rremove("ylab") +
-                        rremove("legend.title"), 
-                      iso.Cirrfila + rremove("ylab"),
-                      nrow = 1, ncol = 3,
-                      labels = c("a", "b", "c"), vjust = 0.2,
-                      common.legend = T, legend = "top")
+hist(multiplicative_errors, main = "Distribution of Multiplicative Error Terms",
+     xlab = expression(epsilon[j]), breaks = 20)
 
-#ggsave("figures/FigS8.png", iso.plot, width = 9, height = 5, units = "in", dpi = 600)
-#ggsave("figures/FigS8.pdf", iso.plot, width = 9, height = 5, units = "in", dpi = 600)
+# LOO analysis
+
+log_lik <- posterior_samples$loglik 
+loo_results <- loo(log_lik)
+
+# Print LOO results
+print(loo_results)
 ```
 
 # IV. Community effects
@@ -1746,7 +1797,7 @@ Spr.pred.plot <- ggplot(data = Spr.pred %>% filter(.epred < 10)) +
   labs(x = bquote("Species density (species richness /" ~m^2~")")) +
   guides(fill = guide_legend(nrow = 1, title = "Seabird-nutrient load"),
          col = guide_legend(nrow = 1, title = "Seabird-nutrient load")) +
-   coord_cartesian(xlim=c(0, 13))
+   coord_cartesian(xlim = c(0, 13))
 
 Dens.pred.plot <- ggplot(data = Dens.pred %>% filter(.epred < 30)) +
   stat_slab(aes(x = .epred, fill = Location, col = Location,
@@ -1764,7 +1815,7 @@ Dens.pred.plot <- ggplot(data = Dens.pred %>% filter(.epred < 30)) +
   labs(x = bquote("Density (number of individuals /" ~m^2~")")) +
   guides(fill = guide_legend(nrow = 1, title = "Seabird-nutrient load"),
          col = guide_legend(nrow = 1, title = "Seabird-nutrient load"))  +
-   coord_cartesian(xlim=c(0, 31)) 
+   coord_cartesian(xlim = c(0, 31)) 
 
 Biomass_m.pred.plot <- ggplot(data = Biomass_m.pred %>% filter(.epred < 9)) +
   stat_slab(aes(x = .epred, fill = Location, col = Location,
@@ -1782,7 +1833,7 @@ Biomass_m.pred.plot <- ggplot(data = Biomass_m.pred %>% filter(.epred < 9)) +
   labs(x = bquote("Biomass (g /" ~m^2~")")) +
   guides(fill = guide_legend(nrow = 1, title = "Seabird-nutrient load"),
          col = guide_legend(nrow = 1, title = "Seabird-nutrient load")) +
-   coord_cartesian(xlim=c(0, 10))
+   coord_cartesian(xlim = c(0, 10))
 
 # plot  
 com_estimates.plot <- ggarrange(Spr.pred.plot + rremove("y.text"),
@@ -1793,8 +1844,8 @@ com_estimates.plot <- ggarrange(Spr.pred.plot + rremove("y.text"),
 
 com_estimates.plot
 
-#ggsave("figures/FigS9.png", com_estimates.plot, width = 6, height = 5, units = "in", dpi = 600)
-#ggsave("figures/FigS9.pdf", com_estimates.plot, width = 6, height = 5, units = "in", dpi = 600)
+#ggsave("figures/FigS8.png", com_estimates.plot, width = 6, height = 5, units = "in", dpi = 600)
+#ggsave("figures/FigS8.pdf", com_estimates.plot, width = 6, height = 5, units = "in", dpi = 600)
 ```
 
 # IV. 2. Community composition - RDA
@@ -1872,8 +1923,8 @@ rda_plot
 #Enneabel
 4.24/sum(species_scores[,1])
 
-#ggsave("figures/FigS10.png", rda_plot, width = 6, height = 6, units = "in", dpi = 600)
-#ggsave("figures/FigS10.pdf", rda_plot, width = 6, height = 6, units = "in", dpi = 600)
+#ggsave("figures/FigS9.png", rda_plot, width = 6, height = 6, units = "in", dpi = 600)
+#ggsave("figures/FigS9.pdf", rda_plot, width = 6, height = 6, units = "in", dpi = 600)
 ```
 
 # V. Species-specific effects
@@ -1923,7 +1974,6 @@ contrasts_TL_com <- contrast(em_TL_com, method = "tukey")
 
 contrasts_TL_com
 hypothesis(TL_mod_com, hypothesis = "LocationLow < 0")
-hypothesis(W_mod_com, hypothesis = "LocationLow < 0")
 ```
 
 # V. 1. b. Species level total length
@@ -2142,8 +2192,8 @@ TL_W.plot <- ggarrange(TL.pred.plot, W.pred.plot + rremove("y.text"),
           nrow = 1, ncol = 2, widths = c(1,0.7), hjust = c(-10, 0.3),
           common.legend = T, legend = "top", labels = c("a", "b"))
 
-#ggsave("figures/Fig3.png", TL_W.plot, width = 6, height = 4, units = "in", dpi = 600)
-#ggsave("figures/Fig3.pdf", TL_W.plot, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/Fig4.png", TL_W.plot, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("figures/Fig4.pdf", TL_W.plot, width = 6, height = 4, units = "in", dpi = 600)
 
 TL_W.plot
 ```
@@ -2211,8 +2261,8 @@ rda_uvc.plot <- ggord(uvc_RDA, Location, hull = T, ext = 1.05, repel = T, veclsz
 
 rda_uvc.plot
 
-ggsave("figures/FigS11.png", rda_uvc.plot, width = 6, height = 6, units = "in", dpi = 600)
-ggsave("figures/FigS11.pdf", rda_uvc.plot, width = 6, height = 6, units = "in", dpi = 600)
+ggsave("figures/FigS10.png", rda_uvc.plot, width = 6, height = 6, units = "in", dpi = 600)
+ggsave("figures/FigS10.pdf", rda_uvc.plot, width = 6, height = 6, units = "in", dpi = 600)
 ```
 
 # VI. 2. Biomass
