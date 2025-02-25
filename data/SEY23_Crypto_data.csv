@@ -361,7 +361,7 @@ I016,Eviota notata,Gobiidae,12.96,0.024,SEY23_0271
 I017,Eviota bipunctata,Gobiidae,13.4,0.032,SEY23_0272
 I018,Eviota sebreei,Gobiidae,9.21,0.008,SEY23_0273
 I019,Eviota sp,Gobiidae,8.23,0.009,SEY23_0274
-I020,Eviota fregatensis,Gobiidae,8.91,0.006,SEY23_0275
+I020,Eviota springeri,Gobiidae,8.91,0.006,SEY23_0275
 I021,Echidna polyzona,Muraenidae,141.01,10,SEY23_I1
 I022,Gymnothorax buroensis,Muraenidae,182,28.972,SEY23_I2
 J001,Pseudocheilinus hexataenia,Labridae,50.52,2.142,J
@@ -667,13 +667,13 @@ J300,Verulux cypserulus,Apogonidae,30.2,0.288,SEY23_0278
 K001,Plesiops coeruleolineatus,Plesiopidae,47.09,1.915,SEY23_K
 K002,Plesiops coeruleolineatus,Plesiopidae,41.18,1.157,SEY23_K
 K003,Plesiops coeruleolineatus,Plesiopidae,26.94,0.31,SEY23_0279
-K004,Eviota fregatensis,Gobiidae,14.29,0.043,SEY23_0280
+K004,Eviota springeri,Gobiidae,14.29,0.043,SEY23_0280
 K005,Eviota guttata,Gobiidae,20.15,0.077,SIA_043
 K006,Enneapterygius cf tutuilae,Tripterygiidae,10.7,0.096,SEY23_0281
 K007,Eviota bipunctata,Gobiidae,12.57,0.031,SEY23_0282
 K008,Eviota nebulosa,Gobiidae,15.85,0.052,SEY23_0283
 K009,Priolepis compita,Gobiidae,16.71,0.048,SEY23_0284
-K010,Eviota fregatensis,Gobiidae,12.74,0.031,SEY23_0285
+K010,Eviota springeri,Gobiidae,12.74,0.031,SEY23_0285
 K011,Eviota guttata,Gobiidae,14.76,0.03,SIA_044
 K012,Eviota guttata,Gobiidae,13.27,0.011,SIA_045
 K013,Eviota nebulosa,Gobiidae,10.33,0.009,SEY23_0286
@@ -880,7 +880,7 @@ Q032,Cabillus tongarevae,Gobiidae,16.92,0.077,SEY23_0443
 Q033,Eviota bipunctata,Gobiidae,12.92,0.037,SEY23_0444
 Q034,Eviota bipunctata,Gobiidae,16.04,0.048,SEY23_0445
 Q035,Eviota pseudostigma,Gobiidae,12.77,0.032,SEY23_0446
-Q036,Eviota fregatensis,Gobiidae,9.93,0.013,SEY23_0447
+Q036,Eviota springeri,Gobiidae,9.93,0.013,SEY23_0447
 Q037,Eviota prasina,Gobiidae,9.25,0.007,SEY23_0448
 Q038,Eviota prasina,Gobiidae,8.56,0.002,SEY23_0449
 Q039,Gobiesocidae sp,Gobiesocidae,7.01,0.001,SEY23_0450
@@ -909,7 +909,7 @@ S019,Eviota sebreei,Gobiidae,NA,NA,NA
 S020,Eviota sebreei,Gobiidae,9.95,0.005,SEY23_0470
 S021,Trimmatom offucius,Gobiidae,9.85,0.014,SEY23_0471
 S022,Eviota sebreei,Gobiidae,15.93,0.036,SEY23_0472
-S023,Eviota fregatensis,Gobiidae,10.94,0.008,SEY23_0473
+S023,Eviota springeri,Gobiidae,10.94,0.008,SEY23_0473
 S024,Eviota sebreei,Gobiidae,10.84,0.014,SEY23_0474
 S025,Eviota sebreei,Gobiidae,17.01,0.05,SEY23_0475
 S026,Enneapterygius abeli,Tripterygiidae,19.91,0.102,SIA_089
@@ -962,7 +962,7 @@ U012,Eviota guttata,Gobiidae,12.86,0.026,SIA_102
 U013,Eviota zebrina,Gobiidae,8.78,0.012,SEY23_0491
 U014,Eviota guttata,Gobiidae,14.91,0.026,SIA_103
 U015,Eviota guttata,Gobiidae,10.45,0.02,SEY23_0492
-U016,Eviota fregatensis,Gobiidae,16.08,0.048,SEY23_0493
+U016,Eviota springeri,Gobiidae,16.08,0.048,SEY23_0493
 U017,Eviota cf sparsa,Gobiidae,19.21,0.068,SEY23_0494
 U018,Eviota cf sparsa,Gobiidae,14.66,0.038,SEY23_0495
 U019,Eviota cf sparsa,Gobiidae,16.38,0.049,SEY23_0496
@@ -986,8 +986,8 @@ V009,Cirripectes filamentosus,Blenniidae,28.38,0.419,SIA_104
 V010,Apogon coccineus,Apogonidae,31.2,0.448,SEY23_0507
 V011,Plesiops coeruleolineatus,Plesiopidae,21.61,0.141,SEY23_0508
 V012,Dinematichthys iluocoeteoides,Dinematichthyidae,20.46,0.142,SEY23_0509
-V013,Eviota fregatensis,Gobiidae,12.81,0.031,SEY23_0510
-V014,Eviota fregatensis,Gobiidae,13.16,0.024,SEY23_0511
+V013,Eviota springeri,Gobiidae,12.81,0.031,SEY23_0510
+V014,Eviota springeri,Gobiidae,13.16,0.024,SEY23_0511
 V015,Apogon coccineus,Apogonidae,27.18,0.252,SEY23_0512
 V016,Eviota nebulosa,Gobiidae,13.89,0.051,SEY23_0513
 V017,Eviota nebulosa,Gobiidae,15.74,0.062,SEY23_0514
