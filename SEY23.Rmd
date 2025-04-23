@@ -694,6 +694,10 @@ crypto_SIA_mod <- data %>%
          taxloc = factor(interaction(GENSPE, Location)))
 
 d15Nmod_crypto <- brm(d15N ~ 0 + taxloc + (1|Site), iter = 10000, warmup = 5000, cores = 4, data = crypto_SIA_mod)
+d15Nmod_TL <- brm(d15N ~ 0 + taxloc + TL + (1|Site), iter = 10000, warmup = 5000, cores = 4, data = crypto_SIA_mod) #double check no influence of size
+
+summary(d15Nmod_crypto)
+summary(d15Nmod_TL)
 
 # model summary
 summary(d15Nmod_crypto)
@@ -729,6 +733,10 @@ contrasts_d15N.crypto
 hypothesis(d15Nmod_crypto, "taxlocEviogutt.Low < taxlocEviogutt.High")
 hypothesis(d15Nmod_crypto, "taxlocEnneabel.Low < taxlocEnneabel.High")
 hypothesis(d15Nmod_crypto, "taxlocCirrfila.Low < taxlocCirrfila.High")
+
+hypothesis(d15Nmod_TL, "taxlocEnneabel.High > taxlocEnneabel.Low")
+hypothesis(d15Nmod_TL, "taxlocEviogutt.High > taxlocEviogutt.Low")
+hypothesis(d15Nmod_TL, "taxlocCirrfila.High > taxlocCirrfila.Low")
 ```
 
 # Fig 2. a - d15N across all three species
@@ -1059,9 +1067,11 @@ crypto_SIA_mod <- data %>%
          taxloc = factor(interaction(GENSPE, Location)))
 
 d13Cmod_crypto <- brm(d13C ~ 0 + taxloc + (1|Site), iter = 10000, warmup = 5000, cores = 4, data = crypto_SIA_mod)
+d13Cmod_TL <- brm(d13C ~ 0 + taxloc + TL + (1|Site), iter = 10000, warmup = 5000, cores = 4, data = crypto_SIA_mod)
 
 # model summary
 summary(d13Cmod_crypto)
+summary(d13Cmod_TL)
 
 # assess model fit
 #plot(d13Cmod_crypto)
@@ -1092,6 +1102,10 @@ contrasts_d13C.crypto
 hypothesis(d13Cmod_crypto, hypothesis = "taxlocEnneabel.Low < taxlocEnneabel.High")
 hypothesis(d13Cmod_crypto, hypothesis = "taxlocEviogutt.Low < taxlocEviogutt.High")
 hypothesis(d13Cmod_crypto, hypothesis = "taxlocCirrfila.Low < taxlocCirrfila.High")
+
+hypothesis(d13Cmod_TL, hypothesis = "taxlocEnneabel.Low < taxlocEnneabel.High")
+hypothesis(d13Cmod_TL, hypothesis = "taxlocEviogutt.Low < taxlocEviogutt.High")
+hypothesis(d13Cmod_TL, hypothesis = "taxlocCirrfila.Low < taxlocCirrfila.High")
 ```
 
 # Fig 2. d - d13C across all three species
@@ -1358,7 +1372,7 @@ output_options <- list(summary_save = TRUE,
 output_JAGS(jags.Enneabel.cont.one, Enneabel_mix, sources_Enneabel_mix, output_options)
 ```
 
-# Fig S6
+# Fig 3
 
 ```{r MM-Enneabel-plot}
 g.post.Enneabel <- output_posteriors(jags.Enneabel.cont.one, Enneabel_mix, sources_Enneabel_mix, output_options)
@@ -1433,6 +1447,126 @@ plot.Enneabel.mix <- ggarrange(plot.Enneabel.mix.c + rremove("legend.title"), pl
 
 #ggsave("figures/Fig3.png", plot.Enneabel.mix, width = 6, height = 5, units = "in", dpi = 600)
 #ggsave("figures/Fig3.pdf", plot.Enneabel.mix, width = 6, height = 5, units = "in", dpi = 600)
+
+plot.Enneabel.mix
+get_data(plot.Enneabel.mix.a)
+get_data(plot.Enneabel.mix.b)
+
+# LOO and error
+
+observed <- crypto_SIA_mix_Enneabel_cont$d13C
+
+posterior_samples <- jags.Enneabel.cont.one$BUGSoutput$sims.list
+
+source_proportions <- posterior_samples$p.ind  # Source proportions from posterior
+isotope_means <- crypto_sources_SIA_mix_cont$Meand13C          # Source isotopic means
+isotope_sds <- crypto_sources_SIA_mix_cont$SDd13C             # Source isotopic SDs
+
+predict_isotope <- function(proportions, isotope_means) {
+  rowSums(proportions * isotope_means)  # Weighted mean of source contributions
+}
+
+predicted <- apply(source_proportions, 1, function(proportions) {
+  predict_isotope(proportions, isotope_means)
+})
+
+predicted_median <- apply(predicted, 1, median)
+
+multiplicative_errors <- observed / predicted_median
+
+error_summary <- summary(multiplicative_errors)
+print(error_summary)
+
+hist(multiplicative_errors, main = "Distribution of Multiplicative Error Terms",
+     xlab = expression(epsilon[j]), breaks = 20)
+
+# LOO analysis
+
+log_lik <- posterior_samples$loglik 
+loo_results <- loo(log_lik)
+
+# Print LOO results
+print(loo_results)
+```
+
+# Fig S8
+
+```{r MM-Enneabel-supp-plot}
+
+plot.Enneabel.low.3 <- g.post.Enneabel$cont[[2]][[2]] +
+  geom_density(lwd = 0.8, alpha = 0.3, aes(y=..scaled..)) +
+  scale_color_manual(values = c("#A4C689", "#4D8BC9")) +
+  scale_fill_manual(values = c("#A4C689", "#4D8BC9")) +
+  labs(title = NULL) +
+  theme_grey() +
+  theme(panel.background = element_rect(fill = "transparent"),
+        axis.line = element_line(colour = "black"),
+        axis.title = element_text(size = 10)) +
+  ggtitle("Seabird-poor; 3m")
+
+plot.Enneabel.low.4 <- g.post.Enneabel$cont[[2]][[3]] +
+  geom_density(lwd = 0.8, alpha = 0.3, aes(y=..scaled..)) +
+  scale_color_manual(values = c("#A4C689", "#4D8BC9")) +
+  scale_fill_manual(values = c("#A4C689", "#4D8BC9")) +
+  labs(title = NULL) +
+  theme_grey() +
+  theme(panel.background = element_rect(fill = "transparent"),
+        axis.line = element_line(colour = "black"),
+        axis.title = element_text(size = 10)) +
+  ggtitle("Seabird-poor; 4m")
+
+plot.Enneabel.low.9 <- g.post.Enneabel$cont[[2]][[4]] +
+  geom_density(lwd = 0.8, alpha = 0.3, aes(y=..scaled..)) +
+  scale_color_manual(values = c("#A4C689", "#4D8BC9")) +
+  scale_fill_manual(values = c("#A4C689", "#4D8BC9")) +
+  labs(title = NULL) +
+  theme_grey() +
+  theme(panel.background = element_rect(fill = "transparent"),
+        axis.line = element_line(colour = "black"),
+        axis.title = element_text(size = 10)) +
+  ggtitle("Seabird-poor; 9m")
+
+plot.Enneabel.high.3 <- g.post.Enneabel$cont[[1]][[2]] +
+  geom_density(lwd = 0.8, alpha = 0.3, aes(y=..scaled..)) +
+  scale_color_manual(values = c("#A4C689", "#4D8BC9")) +
+  scale_fill_manual(values = c("#A4C689", "#4D8BC9")) +
+  labs(title = NULL) +
+  theme_grey() +
+  theme(panel.background = element_rect(fill = "transparent"),
+        axis.line = element_line(colour = "black"),
+        axis.title = element_text(size = 10)) +
+  ggtitle("Seabird-rich; 3m")
+
+plot.Enneabel.high.4 <- g.post.Enneabel$cont[[1]][[3]] +
+  geom_density(lwd = 0.8, alpha = 0.3, aes(y=..scaled..)) +
+  scale_color_manual(values = c("#A4C689", "#4D8BC9")) +
+  scale_fill_manual(values = c("#A4C689", "#4D8BC9")) +
+  labs(title = NULL) +
+  theme_grey() +
+  theme(panel.background = element_rect(fill = "transparent"),
+        axis.line = element_line(colour = "black"),
+        axis.title = element_text(size = 10)) +
+  ggtitle("Seabird-rich; 4m")
+
+plot.Enneabel.high.9 <- g.post.Enneabel$cont[[1]][[4]] +
+  geom_density(lwd = 0.8, alpha = 0.3, aes(y=..scaled..)) +
+  scale_color_manual(values = c("#A4C689", "#4D8BC9")) +
+  scale_fill_manual(values = c("#A4C689", "#4D8BC9")) +
+  labs(title = NULL) +
+  theme_grey() +
+  theme(panel.background = element_rect(fill = "transparent"),
+        axis.line = element_line(colour = "black"),
+        axis.title = element_text(size = 10)) +
+  ggtitle("Seabird-rich; 9m")
+
+plot.Enneabel.supp <- ggarrange(plot.Enneabel.low.3 + rremove("legend.title"), plot.Enneabel.high.3 + rremove("ylab") + rremove("legend.title"),
+                               plot.Enneabel.low.4 + rremove("legend.title"), plot.Enneabel.high.4 + rremove("ylab") + rremove("legend.title"),
+                               plot.Enneabel.low.9 + rremove("legend.title"), plot.Enneabel.high.9 + rremove("ylab") + rremove("legend.title"),
+                               ncol = 2, nrow = 3, common.legend = T, legend = "top") 
+plot.Enneabel.supp
+
+ggsave("figures/FigS8.png", plot.Enneabel.supp, width = 6, height = 5, units = "in", dpi = 600)
+ggsave("figures/FigS8.pdf", plot.Enneabel.supp, width = 6, height = 5, units = "in", dpi = 600)
 
 plot.Enneabel.mix
 get_data(plot.Enneabel.mix.a)
@@ -1844,8 +1978,8 @@ com_estimates.plot <- ggarrange(Spr.pred.plot + rremove("y.text"),
 
 com_estimates.plot
 
-#ggsave("figures/FigS8.png", com_estimates.plot, width = 6, height = 5, units = "in", dpi = 600)
-#ggsave("figures/FigS8.pdf", com_estimates.plot, width = 6, height = 5, units = "in", dpi = 600)
+#ggsave("figures/FigS9.png", com_estimates.plot, width = 6, height = 5, units = "in", dpi = 600)
+#ggsave("figures/FigS9.pdf", com_estimates.plot, width = 6, height = 5, units = "in", dpi = 600)
 ```
 
 # IV. 2. Community composition - RDA
@@ -1923,8 +2057,8 @@ rda_plot
 #Enneabel
 4.24/sum(species_scores[,1])
 
-#ggsave("figures/FigS9.png", rda_plot, width = 6, height = 6, units = "in", dpi = 600)
-#ggsave("figures/FigS9.pdf", rda_plot, width = 6, height = 6, units = "in", dpi = 600)
+#ggsave("figures/FigS10.png", rda_plot, width = 6, height = 6, units = "in", dpi = 600)
+#ggsave("figures/FigS10.pdf", rda_plot, width = 6, height = 6, units = "in", dpi = 600)
 ```
 
 # V. Species-specific effects
@@ -2261,8 +2395,8 @@ rda_uvc.plot <- ggord(uvc_RDA, Location, hull = T, ext = 1.05, repel = T, veclsz
 
 rda_uvc.plot
 
-ggsave("figures/FigS10.png", rda_uvc.plot, width = 6, height = 6, units = "in", dpi = 600)
-ggsave("figures/FigS10.pdf", rda_uvc.plot, width = 6, height = 6, units = "in", dpi = 600)
+ggsave("figures/FigS11.png", rda_uvc.plot, width = 6, height = 6, units = "in", dpi = 600)
+ggsave("figures/FigS11.pdf", rda_uvc.plot, width = 6, height = 6, units = "in", dpi = 600)
 ```
 
 # VI. 2. Biomass
