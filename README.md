@@ -3,7 +3,7 @@
 
 **This repository contains code and data presented in the article**:
   
-  Authors (anonymised). Seabird-derived nutrients influence feeding pathways and body size in cryptobenthic reef fishes.
+L.-L. Jeannot, J.P. Lozano-Peña, A. Zora, S. J. Brandl, N. A. J. Graham (2025). Seabird-derived nutrients influence feeding pathways and body size in cryptobenthic reef fishes. Proceedings B of the Royal Society.
 
   
 [![DOI](https://zenodo.org/badge/853375907.svg)](https://doi.org/10.5281/zenodo.15270682)
